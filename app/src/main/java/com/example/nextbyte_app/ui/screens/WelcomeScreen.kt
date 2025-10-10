@@ -23,26 +23,35 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF6A0DAD),
+                        Color(0xFF4B0082)
+                    )
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
+
     ) {
         // LOGO
         Image(
             painter = painterResource(id = R.drawable.logo_nextbyte),
             contentDescription = "Logo NextByte",
             modifier = Modifier
-                .size(120.dp)
+                .size(200.dp)
                 .padding(bottom = 24.dp),
             contentScale = ContentScale.Fit
         )
 
         // Título
         Text(
+
             text = "NextByte",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A1A1A)
+            color = Color.White
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -51,7 +60,7 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
         Text(
             text = "La tecnología del futuro,\nhoy",
             fontSize = 16.sp,
-            color = Color.Gray,
+            color = Color.White,
             textAlign = TextAlign.Center
         )
 
@@ -64,14 +73,16 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
                 .fillMaxWidth(0.8f)
                 .height(50.dp),
             shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow),
             contentPadding = PaddingValues()
         ) {
             Box(
                 modifier = Modifier
                     .background(
                         brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF8A2BE2), Color(0xFF7B68EE))
+                            colors = listOf(
+                                Color(0xFFFFD700),
+                                Color(0xFFFFA500))
                         ),
                         shape = RoundedCornerShape(25.dp)
                     )

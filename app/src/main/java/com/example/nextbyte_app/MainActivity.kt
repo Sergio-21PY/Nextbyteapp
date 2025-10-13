@@ -11,10 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.nextbyte_app.ui.screens.LoginScreen // Asegúrate de tener este import
-import com.example.nextbyte_app.ui.screens.RegisterScreen // Asegúrate de tener este import
-import com.example.nextbyte_app.ui.screens.WelcomeScreen // Asegúrate de tener este import
-// Importar la pantalla principal (Home), aunque sea temporal
+import com.example.nextbyte_app.ui.screens.LoginScreen
+import com.example.nextbyte_app.ui.screens.RegisterScreen
+import com.example.nextbyte_app.ui.screens.WelcomeScreen
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
 
 class MainActivity : ComponentActivity() {

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -100,6 +101,8 @@ fun LoginScreen(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
+            /*Transformacion a caracteres: 13/10/2025*/
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier
                 .padding(horizontal = 32.dp) //Margen de 32dp a los lados
                 .fillMaxWidth(),

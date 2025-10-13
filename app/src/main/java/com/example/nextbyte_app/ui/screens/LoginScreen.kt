@@ -1,5 +1,6 @@
 package com.example.nextbyte_app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-// ... (otras importaciones)
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 
 
 @Composable
@@ -41,6 +43,7 @@ fun LoginScreen(
     // Estados para los TextField
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -114,7 +117,25 @@ fun LoginScreen(
         // BOTÓN DE INICIAR SESIÓN
         Button(
             //Usamos el parámetro onLoginSuccess
-            onClick = { onLoginSuccess() },
+            onClick = {
+                val inputEmail = emailState.value
+                val inputPassword = passwordState.value
+
+                if (inputEmail == BdFake.registeredEmail && inputPassword == BdFake.registeredPassword){
+                    Toast.makeText(context, "¡Acceso Exitoso! Bienvenido.", Toast.LENGTH_SHORT).show()
+                    onLoginSuccess()
+
+                }else{
+                    Toast.makeText(
+                        context,
+                        "Credenciales incorrectas. Intenta con: ${BdFake.registeredEmail}",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                }
+
+
+            },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .height(50.dp),

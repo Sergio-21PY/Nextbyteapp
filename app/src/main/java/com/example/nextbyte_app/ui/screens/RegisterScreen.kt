@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+
 @Composable
 fun RegisterScreen(
     //Usamos onBack para indicar que la acción es de regreso.
@@ -88,13 +89,17 @@ fun RegisterScreen(
 
                 if (email.isNotEmpty() && password.isNotEmpty() && number.isNotEmpty()) {
 
+                    BdFake.registeredEmail = email
+                    BdFake.registeredPassword = password
+                    BdFake.registeredNumber = number
+
                     /*El toast es un mensaje de retroalimentacion para el usuario,
                     * donde se le notificara si su accion ha terminado o fallo sin
                     * interrumpir la funcionalidad.*/
                     // Notificación de éxito
                     Toast.makeText(
                         context,
-                        "¡Registro exitoso para: $email!",
+                        "¡Registro exitoso para: ${BdFake.registeredEmail}!",
                         Toast.LENGTH_LONG
                     ).show()
 

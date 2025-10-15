@@ -1,5 +1,6 @@
 package com.example.nextbyte_app
 
+import HomeScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.nextbyte_app.ui.screens.LoginScreen
-import com.example.nextbyte_app.ui.screens.RegisterScreen
+import com.example.nextbyte_app.ui.screens.login.LoginScreen
+import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
 
@@ -100,7 +101,11 @@ class MainActivity : ComponentActivity() {
                         // 4. Pantalla HOME (Definida para que el Login funcione)
                         composable("home") {
 
-                            Text(text = "¡Pantalla Principal de NextByte!")
+                            HomeScreen()
+                        }
+
+                        composable ("product"){
+                            Text(text = "Pantalla de productos de NextByte")
                         }
                     }
                 }

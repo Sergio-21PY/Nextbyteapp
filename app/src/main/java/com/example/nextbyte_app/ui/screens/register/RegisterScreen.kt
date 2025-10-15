@@ -1,4 +1,4 @@
-package com.example.nextbyte_app.ui.screens
+package com.example.nextbyte_app.ui.screens.register
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nextbyte_app.ui.screens.BdFake
 
 
 @Composable

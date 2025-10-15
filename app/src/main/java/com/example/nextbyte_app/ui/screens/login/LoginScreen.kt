@@ -1,5 +1,4 @@
-package com.example.nextbyte_app.ui.screens
-
+package com.example.nextbyte_app.ui.screens.login
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +30,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.nextbyte_app.ui.screens.BdFake
 
 
 @Composable
@@ -104,7 +103,7 @@ fun LoginScreen(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
-            /*Transformacion a caracteres: 13/10/2025*/
+            /*Caracter visual de contraseña: 13/10/2025*/
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier
                 .padding(horizontal = 32.dp) //Margen de 32dp a los lados
@@ -114,7 +113,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // BOTÓN DE INICIAR SESIÓN
+        // Boton de iniciar sesion.
         Button(
             //Usamos el parámetro onLoginSuccess
             onClick = {

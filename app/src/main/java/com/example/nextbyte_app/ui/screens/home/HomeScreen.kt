@@ -63,9 +63,7 @@ fun HomeScreen() {
             }
 
 
-            composable(AppDestinations.Search.route) {
-                Text(text = "Contenido de Búsqueda")
-            }
+
             composable(AppDestinations.Categories.route) {
                 Text(text = "Contenido de Categorías")
             }

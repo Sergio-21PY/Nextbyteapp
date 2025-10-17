@@ -12,10 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.nextbyte_app.ui.screens.ProductDetailScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController() /*<----- Variable que controla los escenarios.*/
                 /*-------------------------------------------------------------------------------------*/
-                Surface(modifier = Modifier.fillMaxSize()) { // ← Agregar fillMaxSize()
+                Surface(modifier = Modifier.fillMaxSize()) {
 
                     /*NavHost vendria siendo el escenario, es donde estaran ubicadas las diferentes
                     * pantallas de la aplicacion*/
@@ -48,64 +52,58 @@ class MainActivity : ComponentActivity() {
                         /*Composable esta encargado de mapear la ruta de los escenarios*/
                         composable("welcome") {
                             WelcomeScreen(
-                                onNavigateToLogin = { // ← Cambiar a onNavigateToLogin
-                                    navController.navigate("login") // ← Navegar a login
+                                onNavigateToLogin = {
+                                    navController.navigate("login")
                                 }
                             )
                         }
 
-                        /*¿Que tipo de eventos puedo crear?
-                        1) onNavigateToLogin: Navega al tocar el boton de login
-                        * Ejemplo: Button(onClick = onNavigateToLogin)
-                        * --------------------------------------------------
-                        2) onSkip: Salta una pantalla al tocar el boton
-                         Ejemplo: Button(onClick = onSkip)
-                         ---------------------------------------------------
-                         ---------------------------------------------------
-                         ¿Que tipos de nombre puedo colocar?
-                         1) on + [Verbo]: Para acciones del usuario que no involucran navegacion
-                         Ejemplo: onButtonClick, onTextChange, onDimiss.
-                         ---------------------------------------------------
-                         2) onNavigateTo + [Pantalla]: Para acciones del usuario de ir a otra pantalla.
-                         Ejemplo: onNavigateToLogin
-                         ---------------------------------------------------
-                         3) onAction + [Resultado]: Para indicar resultados de una accion
-                         Ejemplo: onLoginSuccess, onLogoutConfirmed.*/
-
                         composable("register") {
                             RegisterScreen(
                                 onBack = {
-                                    //volver a la pantalla inmediatamente anterior
                                     navController.popBackStack()
                                 }
                             )
                         }
 
-                        //Parametros para la pantalla de login
                         composable("login"){
                             LoginScreen(
-                                //Navega a home y limpia el historial mediante el popUpTo("login").
                                 onLoginSuccess = {
                                     navController.navigate("home") {
-                                        // Limpia el back stack para que no pueda volver al login
                                         popUpTo("login") { inclusive = true }
                                     }
                                 },
-                                // 2. Conexión de REGISTRO: Navega a la pantalla de registro.
                                 onNavigateToRegister = {
                                     navController.navigate("register")
                                 }
                             )
                         }
 
-                        // 4. Pantalla HOME (Definida para que el Login funcione)
                         composable("home") {
-
-                            HomeScreen()
+                            HomeScreen(navController) // <-- Le pasas el navController a tu pantalla principal
                         }
 
                         composable ("product"){
                             Text(text = "Pantalla de productos de NextByte")
+                        }
+
+                        // Ruta hacia los productos "Para ver los detalles." ---
+                        composable(
+                            route = "product_detail_route/{productId}",
+                            arguments = listOf(
+                                navArgument("productId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { backStackEntry ->
+                            // Extrae el ID del producto de los argumentos de navegación
+                            val productId = backStackEntry.arguments?.getInt("productId")
+                            if (productId != null) {
+                                // Llama a la pantalla de detalle, pasándole el ID
+                                ProductDetailScreen(productId = productId)
+                            } else {
+                                Text(text = "Error: Producto no encontrado.")
+                            }
                         }
                     }
                 }

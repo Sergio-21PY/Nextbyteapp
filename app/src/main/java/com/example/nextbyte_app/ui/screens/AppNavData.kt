@@ -55,7 +55,7 @@ fun ECommerceBottomBar(navController: NavController) {
 
     // *** LÓGICA DE LANZAMIENTO DE CÁMARA ***
 
-    // 1. Launcher para abrir la cámara (usando TakePicturePreview para simplicidad)
+    //Launcher para abrir la cámara (usando TakePicturePreview para simplicidad)
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -82,7 +82,7 @@ fun ECommerceBottomBar(navController: NavController) {
     val launchCameraAction: () -> Unit = {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
-    // ****************************************
+    /*-------------------------------------------------------------------------------*/
 
     NavigationBar(containerColor = bottomBarColor) {
         items.forEach { destination ->
@@ -107,21 +107,21 @@ fun ECommerceBottomBar(navController: NavController) {
                     }
                 },
 
-                // *** DISEÑO PROMINENTE ***
+                // *** DISEÑO CAMARA ***
                 icon = {
                     if (isCamera) {
                         Box(
-                            // Aplicamos forma, tamaño y color de fondo de FAB
+                            // Modificaciones del icono camara.
                             modifier = Modifier
                                 .size(56.dp) // Tamaño grande
                                 .clip(CircleShape) // Forma redonda
-                                .background(cameraFABColor), // Fondo llamativo
+                                .background(cameraFABColor), //
                             contentAlignment = androidx.compose.ui.Alignment.Center
                         ) {
                             Icon(
                                 imageVector = destination.icon,
                                 contentDescription = destination.label,
-                                modifier = Modifier.size(30.dp), // Ícono un poco más grande
+                                modifier = Modifier.size(30.dp),
                                 tint = iconTint
                             )
                         }
@@ -134,16 +134,16 @@ fun ECommerceBottomBar(navController: NavController) {
                         )
                     }
                 },
-                // ************************
+                /*----------------------------------------------------------------*/
 
-                // Ocultamos la etiqueta si es la cámara
+                //Ocultamos la etiqueta si es la cámara
                 label = {
                     if (!isCamera) {
                         Text(destination.label, color = if (isSelected) Color.White else unselectedIconColor)
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    // Hacemos el indicador de selección transparente para no arruinar el diseño FAB
+                   //Cuando pinchamos una opcion se ve transparante
                     indicatorColor = Color.Transparent,
                     unselectedIconColor = unselectedIconColor
                 )

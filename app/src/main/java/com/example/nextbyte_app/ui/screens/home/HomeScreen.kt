@@ -11,11 +11,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.navigation.NavController
 import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
 
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
 
     //NavController DEDICADO para la navegación de la barra inferior
     val bottomNavController = rememberNavController()
@@ -54,7 +55,7 @@ fun HomeScreen() {
 
                     //Carrusel
                     item {
-                        HomeCarousel() // Llama a tu carrusel
+                        HomeCarousel(navController = navController) // Llama al carrusel
                     }
 
                    //Podemos agregar mas productos por aqui a futuro

@@ -27,7 +27,7 @@ sealed class AppDestinations(val route: String, val icon: ImageVector, val label
 
     /*Utulizamos el data object para que cada instancia sea unica.*/
     data object Home : AppDestinations("home_route", Icons.Default.Home, "Home")
-    data object Categories : AppDestinations("categories_route", Icons.Default.Category, "Categories")
+    data object Productos : AppDestinations("productos_route", Icons.Default.Category, "Productos")
 
     data object Camera : AppDestinations("camera_route", Icons.Default.PhotoCamera, "Cámara")
     data object Cart : AppDestinations("cart_route", Icons.Default.ShoppingCart, "Cart")
@@ -41,8 +41,8 @@ sealed class AppDestinations(val route: String, val icon: ImageVector, val label
         /*Parametros de navagacion mediante NavController*/
 fun ECommerceBottomBar(navController: NavController) {
     /*La lista de items la tomamos de nuestra clase sellada donde se encuentran los data objects,
-    * Home,Searh,Categories,Cart y Account */
-    val items = listOf(AppDestinations.Home, AppDestinations.Categories, AppDestinations.Camera,AppDestinations.Cart, AppDestinations.Account)
+    * Home,Searh,Productos,Cart y Account */
+    val items = listOf(AppDestinations.Home, AppDestinations.Productos, AppDestinations.Camera,AppDestinations.Cart, AppDestinations.Account)
     /*mediante el compose el nacBackStackEntry le dice que pantalla esta visualizando cada vez que se
     * cambia de pantalla con el navController.*/
     val navBackStackEntry by navController.currentBackStackEntryAsState()

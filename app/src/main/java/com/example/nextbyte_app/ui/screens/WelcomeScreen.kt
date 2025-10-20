@@ -54,7 +54,7 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
             color = Color.White
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(19.dp))
 
         // Slogan
         Text(

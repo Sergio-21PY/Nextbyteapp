@@ -1,13 +1,11 @@
+package com.example.nextbyte_app.ui.screens.Productos
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,66 +18,53 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.nextbyte_app.data.Product
-import com.example.nextbyte_app.data.allProducts
-import com.example.nextbyte_app.ui.screens.home.content.ECommerceBottomBar
-import com.example.nextbyte_app.ui.screens.home.content.AppDestinations
 
 /**
- * Screen principal de productos que muestra la lista de todos los productos disponibles
- * Utiliza el mismo patrón de navegación que HomeScreen con bottom bar
+ * Data class para Producto - Definida localmente para evitar dependencias
+ */
+data class Product(
+    val id: Int,
+    val name: String,
+    val description: String,
+    val price: Int,
+    val imageResId: Int // Usaremos placeholders por ahora
+)
+
+/**
+ * Lista local de productos para testing
+ */
+val localProducts = listOf(
+    Product(
+        id = 101,
+        name = "Ajazz AK820",
+        description = "Teclado mecánico silencioso con 5 capas de aislamiento acústico",
+        price = 39999,
+        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+    ),
+    Product(
+        id = 205,
+        name = "HyperX Cloud III - Auriculares Gaming",
+        description = "Auriculares gaming con espuma viscoelástica y transductores de 53mm",
+        price = 79999,
+        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+    ),
+    Product(
+        id = 312,
+        name = "Monitor Gamer Xiaomi G34WQi",
+        description = "Monitor curvo de 34 pulgadas con resolución WQHD y 180Hz",
+        price = 220999,
+        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+    )
+)
+
+/**
+ * Screen principal de productos que muestra SOLO el contenido
+ * La barra morada inferior se maneja desde HomeScreen
  */
 @Composable
 fun ProductosScreen(navController: NavController) {
-
-    // NavController DEDICADO para la navegación de la barra inferior (igual que HomeScreen)
-    val bottomNavController = rememberNavController()
-
-    Scaffold(
-        // Barra inferior idéntica a la de HomeScreen
-        bottomBar = {
-            ECommerceBottomBar(navController = bottomNavController)
-        }
-    ) { paddingValues ->
-
-        // NavHost para el contenido que cambia con la barra inferior
-        NavHost(
-            navController = bottomNavController,
-            startDestination = AppDestinations.Productos.route,
-            modifier = Modifier.padding(paddingValues)
-        ) {
-
-            // Pantalla principal de productos
-            composable(AppDestinations.Productos.route) {
-                ProductListContent(navController = navController)
-            }
-
-            // Otras pantallas de la barra inferior (igual que en HomeScreen)
-            composable(AppDestinations.Home.route) {
-                // En una implementación real, aquí iría la navegación al HomeScreen
-                Text(text = "Redirigiendo a Home...")
-            }
-            composable(AppDestinations.Cart.route) {
-                Text(text = "Contenido del Carrito")
-            }
-            composable(AppDestinations.Account.route) {
-                Text(text = "Contenido de Cuenta")
-            }
-        }
-    }
-}
-
-/**
- * Contenido principal de la lista de productos
- * Muestra todos los productos en formato de tarjetas
- */
-@Composable
-fun ProductListContent(navController: NavController) {
 
     // LazyColumn para renderizado eficiente (igual que en HomeScreen)
     LazyColumn(
@@ -99,14 +84,13 @@ fun ProductListContent(navController: NavController) {
         }
 
         // Lista de productos usando items de LazyColumn para mejor performance
-        items(allProducts) { product ->
+        items(localProducts) { product ->
             ProductCard(
                 product = product,
                 onProductClick = {
                     // Navegación al detalle del producto (usando el navController principal)
-                    // Aquí puedes implementar la navegación a ProductDetailScreen.kt
                     println("Producto clickeado: ${product.name}")
-                    // navController.navigate("product_detail/${product.id}")
+                    // En el futuro: navController.navigate("product_detail/${product.id}")
                 }
             )
 
@@ -143,10 +127,10 @@ fun ProductCard(product: Product, onProductClick: () -> Unit) {
                 .padding(12.dp)
         ) {
 
-            // Imagen del producto (lado izquierdo)
+            // Imagen del producto (lado izquierdo) - Usando placeholder
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageResId)
+                    .data(product.imageResId) // Usa el placeholder
                     .crossfade(true)
                     .build(),
                 contentDescription = "Imagen de ${product.name}",
@@ -199,9 +183,9 @@ fun ProductCard(product: Product, onProductClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // Icono de "agregar al carrito" (puedes implementar la funcionalidad después)
+                    // Icono de "agregar al carrito"
                     Icon(
-                        painter = painterResource(id = androidx.compose.material.icons.Icons.Filled.ShoppingCart),
+                        imageVector = Icons.Default.ShoppingCart,
                         contentDescription = "Agregar al carrito",
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.primary

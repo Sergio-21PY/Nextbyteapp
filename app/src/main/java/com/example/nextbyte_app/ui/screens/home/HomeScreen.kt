@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.navigation.NavController
 import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
+import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
+import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
+
 
 
 @Composable
@@ -66,10 +69,11 @@ fun HomeScreen(navController: NavController) {
 
 
             composable(AppDestinations.Productos.route) {
-                ProductosScreen(navController = navController) // En lugar del Text anterior
+                ProductosScreen(navController = navController)
             }
+
             composable(AppDestinations.Cart.route) {
-                Text(text = "Contenido del Carrito")
+                CarritoScreen(navController = navController)
             }
             composable(AppDestinations.Account.route) {
                 Text(text = "Contenido de Cuenta")

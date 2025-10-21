@@ -66,7 +66,7 @@ fun HomeScreen(navController: NavController) {
 
 
             composable(AppDestinations.Productos.route) {
-                Text(text = "Contenido de Categorías")
+                ProductosScreen(navController = navController) // En lugar del Text anterior
             }
             composable(AppDestinations.Cart.route) {
                 Text(text = "Contenido del Carrito")

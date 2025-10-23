@@ -1,6 +1,10 @@
 package com.example.nextbyte_app.ui.screens.carrito
 
-import androidx.compose.foundation.Image
+// Imports de Data
+import com.example.nextbyte_app.data.CartItem
+import com.example.nextbyte_app.data.Product
+
+// Imports de UI y Layout
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,66 +20,49 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.activity.ComponentActivity
 
-/**
- * Data class para Producto - Definida localmente
- */
-data class Product(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val price: Int,
-    val imageResId: Int
-)
+//Imports para la sincronizacion de imagenes (pantallas)
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
-/**
- * Data class para representar un item en el carrito con cantidad
- */
-data class CartItem(
-    val product: Product,
-    var quantity: Int = 1
-)
-
-/**
- * Lista local de productos para testing
- */
-val localProducts = listOf(
-    Product(101, "Ajazz AK820", "Teclado mecánico", 39999, android.R.drawable.ic_menu_gallery),
-    Product(205, "HyperX Cloud III", "Auriculares gaming", 79999, android.R.drawable.ic_menu_gallery),
-    Product(312, "Monitor Xiaomi", "Monitor curvo 34\"", 220999, android.R.drawable.ic_menu_gallery)
-)
 
 /**
  * Screen principal del carrito de compras
  */
 @Composable
-fun CarritoScreen(navController: NavController) {
+fun CarritoScreen(
+    navController: NavController,
 
-    val cartItems = remember { mutableStateListOf<CartItem>() }
 
-    LaunchedEffect(Unit) {
-        if (cartItems.isEmpty()) {
-            cartItems.addAll(
-                listOf(
-                    CartItem(localProducts[0], 1),
-                    CartItem(localProducts[1], 2),
-                    CartItem(localProducts[2], 1)
-                )
-            )
-        }
-    }
+    /*Forzamos que el ViewModel "pertenezca" a la MISMA Actividad principal,
+    * con viewModelStoreOwner decimos quien es el dueño de la informacion, en este caso
+    * cartViewModel que es la logica del carrito.*/
+    cartViewModel: CartViewModel = viewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity
+    )
+
+) {
+
+    //Obtiene la lista y el total directamente del ViewModel
+    val cartItems: List<CartItem> = cartViewModel.cartItems
+    val total = cartViewModel.total
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Header simple SIN background problemático
+        // Header simple
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,7 +79,7 @@ fun CarritoScreen(navController: NavController) {
         if (cartItems.isEmpty()) {
             EmptyCartState()
         } else {
-            // Usamos fillMaxSize con fraction en lugar de weight
+            // Lista de items
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,30 +91,18 @@ fun CarritoScreen(navController: NavController) {
                     ) {
                         CartItemCard(
                             cartItem = cartItem,
-                            onUpdateQuantity = { product, newQuantity ->
-                                val item = cartItems.find { it.product.id == product.id }
-                                item?.let {
-                                    if (newQuantity > 0) {
-                                        it.quantity = newQuantity
-                                    } else {
-                                        cartItems.remove(it)
-                                    }
-                                }
-                            },
-                            onRemoveItem = { product ->
-                                cartItems.removeAll { it.product.id == product.id }
-                            }
+                            onUpdateQuantity = cartViewModel::updateQuantity,
+                            onRemoveItem = cartViewModel::removeProduct
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
 
+            // Sección de Checkout
             CheckoutSection(
-                cartItems = cartItems,
-                onCheckout = {
-                    println("Procesando compra... Total: ${calculateTotal(cartItems)}")
-                }
+                total = total,
+                onCheckout = cartViewModel::processCheckout
             )
         }
     }
@@ -171,6 +146,7 @@ fun EmptyCartState() {
 
 /**
  * Tarjeta individual para cada producto en el carrito
+ * (Versión con AsyncImage para que no se cierre)
  */
 @Composable
 fun CartItemCard(
@@ -190,14 +166,19 @@ fun CartItemCard(
                 .padding(12.dp)
         ) {
 
-            // Imagen del producto
-            Image(
-                painter = painterResource(id = cartItem.product.imageResId),
+            // Usamos AsyncImage (de Coil) igual que en ProductoScreem
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(cartItem.product.imageResId)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = "Imagen de ${cartItem.product.name}",
                 modifier = Modifier
                     .size(80.dp)
                     .clip(MaterialTheme.shapes.medium),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = cartItem.product.imageResId),
+                error = painterResource(id = android.R.drawable.ic_menu_gallery)
             )
 
             // Información del producto
@@ -277,12 +258,9 @@ fun QuantitySelector(
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Botón disminuir
         IconButton(onClick = onDecrease) {
             Icon(Icons.Default.Remove, "Disminuir")
         }
-
-        // Cantidad actual
         Text(
             text = quantity.toString(),
             fontSize = 16.sp,
@@ -290,24 +268,21 @@ fun QuantitySelector(
             modifier = Modifier.width(20.dp),
             textAlign = TextAlign.Center
         )
-
-        // Botón aumentar
         IconButton(onClick = onIncrease) {
             Icon(Icons.Default.Add, "Aumentar")
         }
     }
 }
 
+
 /**
  * Sección inferior con total y botón de checkout
  */
 @Composable
 fun CheckoutSection(
-    cartItems: List<CartItem>,
+    total: Int,
     onCheckout: () -> Unit
 ) {
-    val total = calculateTotal(cartItems)
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -316,7 +291,6 @@ fun CheckoutSection(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Subtotal y total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -336,9 +310,7 @@ fun CheckoutSection(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-
             Divider()
-
             Spacer(modifier = Modifier.height(8.dp))
 
             // Total final
@@ -374,12 +346,6 @@ fun CheckoutSection(
     }
 }
 
-/**
- * Calcula el total del carrito
- */
-private fun calculateTotal(cartItems: List<CartItem>): Int {
-    return cartItems.sumOf { it.product.price * it.quantity }
-}
 
 /**
  * Función auxiliar para formatear el precio en formato CLP

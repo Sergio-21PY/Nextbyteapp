@@ -1,5 +1,9 @@
 package com.example.nextbyte_app.ui.screens.Productos
 
+
+import com.example.nextbyte_app.data.Product
+import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,45 +21,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.nextbyte_app.R
+import com.example.nextbyte_app.ui.screens.carrito.CartViewModel
 
 /**
  * Data class para Producto - Definida localmente para evitar dependencias
+ * (NOTA: Esta definición ya no es necesaria aquí,
+ * ahora usamos la que importamos de 'com.example.nextbyte_app.data.Product')
  */
-data class Product(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val price: Int,
-    val imageResId: Int // Usaremos placeholders por ahora
-)
 
 /**
  * Lista local de productos para testing
+ * (Esta lista la mantenemos aquí para mostrar los productos en esta pantalla)
  */
 val localProducts = listOf(
+
     Product(
         id = 101,
         name = "Ajazz AK820",
         description = "Teclado mecánico silencioso con 5 capas de aislamiento acústico",
         price = 39999,
-        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+        imageResId = R.drawable.promo1 // Placeholder
     ),
     Product(
         id = 205,
         name = "HyperX Cloud III - Auriculares Gaming",
         description = "Auriculares gaming con espuma viscoelástica y transductores de 53mm",
         price = 79999,
-        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+        imageResId = R.drawable.promo2// Placeholder
     ),
     Product(
         id = 312,
         name = "Monitor Gamer Xiaomi G34WQi",
         description = "Monitor curvo de 34 pulgadas con resolución WQHD y 180Hz",
         price = 220999,
-        imageResId = android.R.drawable.ic_menu_gallery // Placeholder
+        imageResId = R.drawable.promo3// Placeholder
     )
 )
 
@@ -64,7 +68,18 @@ val localProducts = listOf(
  * La barra morada inferior se maneja desde HomeScreen
  */
 @Composable
-fun ProductosScreen(navController: NavController) {
+fun ProductosScreen(
+    navController: NavController,
+
+    // Forzamos que el ViewModel "pertenezca" a la Actividad principal
+    cartViewModel: CartViewModel = viewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity
+    )
+
+
+) {
+
+    val context = LocalContext.current
 
     // LazyColumn para renderizado eficiente (igual que en HomeScreen)
     LazyColumn(
@@ -91,6 +106,14 @@ fun ProductosScreen(navController: NavController) {
                     // Navegación al detalle del producto (usando el navController principal)
                     println("Producto clickeado: ${product.name}")
                     // En el futuro: navController.navigate("product_detail/${product.id}")
+                },
+                onAddToCartClick = { // <-- 4. Pasamos la acción de "agregar"
+                    cartViewModel.addProduct(product)
+
+                    // <-- 2. AÑADIDA LA NOTIFICACIÓN TOAST
+                    Toast.makeText(context, "${product.name} agregado al carrito", Toast.LENGTH_SHORT).show()
+
+                    println("Agregado ${product.name} al carrito") // Opcional, para testing
                 }
             )
 
@@ -111,10 +134,14 @@ fun ProductosScreen(navController: NavController) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductCard(product: Product, onProductClick: () -> Unit) {
+fun ProductCard(
+    product: Product,
+    onProductClick: () -> Unit,
+    onAddToCartClick: () -> Unit // <-- 5. Recibimos el nuevo lambda
+) {
 
     Card(
-        onClick = onProductClick,
+        onClick = onProductClick, // <-- Esto es para ir al detalle
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),
@@ -184,12 +211,14 @@ fun ProductCard(product: Product, onProductClick: () -> Unit) {
                     )
 
                     // Icono de "agregar al carrito"
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Agregar al carrito",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    IconButton(onClick = onAddToCartClick) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Agregar al carrito",
+                            modifier = Modifier.size(24.dp), // Un poco más grande
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }

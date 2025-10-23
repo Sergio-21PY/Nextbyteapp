@@ -1,6 +1,6 @@
 package com.example.nextbyte_app.ui.screens // O el nombre de tu paquete
 
-import allProducts
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nextbyte_app.data.allProducts
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale

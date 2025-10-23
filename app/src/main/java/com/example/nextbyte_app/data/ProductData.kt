@@ -1,4 +1,4 @@
-// Modelo para un producto individual
+package com.example.nextbyte_app.data
 import com.example.nextbyte_app.R
 data class Product(
     val id: Int,

@@ -1,52 +1,60 @@
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.navigation.NavController
-import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
+import com.example.nextbyte_app.ui.screens.account.AccountScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
-
-
+import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
+import com.example.nextbyte_app.ui.shared.MainTopBar
 
 @Composable
 fun HomeScreen(navController: NavController) {
 
-    //NavController DEDICADO para la navegación de la barra inferior
     val bottomNavController = rememberNavController()
+    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val title = when (currentRoute) {
+        AppDestinations.Home.route -> "Inicio"
+        AppDestinations.Productos.route -> "Productos"
+        AppDestinations.Cart.route -> "Carrito"
+        AppDestinations.Account.route -> "Mi Cuenta"
+        else -> "Next-Byte"
+    }
 
     Scaffold(
-        //barra en el esqueleto
+        topBar = {
+            MainTopBar(
+                title = title,
+                onSettingsClick = { navController.navigate("settings") } // Navega a la nueva pantalla
+            )
+        },
         bottomBar = {
-            // Ecommerce -> Clase AppNavData
             ECommerceBottomBar(navController = bottomNavController)
         }
     ) { paddingValues ->
 
-        // 3. NavHost El contenido que cambia
         NavHost(
             navController = bottomNavController,
             startDestination = AppDestinations.Home.route,
             modifier = Modifier.padding(paddingValues)
         ) {
 
-            //Definición de las 5 Pantallas Composables
             composable(AppDestinations.Home.route) {
-
-                // LazyColumn es un reciclaje de vista para que la app sea fluida
-                LazyColumn(modifier = Modifier
-                    .fillMaxSize()) {
-
-                    //Título de Ofertas
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         Text(
                             text = "🔥 OFERTAS IMPERDIBLES",
@@ -55,18 +63,11 @@ fun HomeScreen(navController: NavController) {
                             modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
                         )
                     }
-
-                    //Carrusel
                     item {
-                        HomeCarousel(navController = navController) // Llama al carrusel
+                        HomeCarousel(navController = navController)
                     }
-
-                   //Podemos agregar mas productos por aqui a futuro
                 }
-                // <<< CIERRE DEL LAZYCOLUMN >>>
             }
-
-
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(navController = navController)
@@ -75,8 +76,9 @@ fun HomeScreen(navController: NavController) {
             composable(AppDestinations.Cart.route) {
                 CarritoScreen(navController = navController)
             }
+
             composable(AppDestinations.Account.route) {
-                Text(text = "Contenido de Cuenta")
+                AccountScreen(navController = bottomNavController)
             }
         }
     }

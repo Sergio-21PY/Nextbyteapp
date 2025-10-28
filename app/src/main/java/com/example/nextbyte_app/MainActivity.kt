@@ -18,8 +18,8 @@ import com.example.nextbyte_app.ui.screens.ProductDetailScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
+import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,45 +27,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NextbyteappTheme {
-                /*El navController es el encargado de controlar la navegacion entre las diferentes pantallas,
-                * se llama mediante una variable
-                * La funcion principal es exponer la funcion: navigate() para entregarle el parametro hacia
-                * donde tiene que ir, ejemplo: navController.navigate("ruta")*/
-
-                val navController = rememberNavController() /*<----- Variable que controla los escenarios.*/
-                /*-------------------------------------------------------------------------------------*/
+                val navController = rememberNavController()
                 Surface(modifier = Modifier.fillMaxSize()) {
-
-                    /*NavHost vendria siendo el escenario, es donde estaran ubicadas las diferentes
-                    * pantallas de la aplicacion*/
                     NavHost(
-                        /*Mediante esta variable le decimos quien es el director de las pantallas,
-                        * en este caso es navController que definimos en la primera variable.*/
                         navController = navController,
-                        /*------------------------------------------------------------------*/
-
-                        /*Mediante la variable startDestination, le decimos cual es el escenario o
-                        * la primera pantalla que debe mostrar al principio de la aplicacion.*/
                         startDestination = "welcome"
                     ) {
-
-                        /*Composable esta encargado de mapear la ruta de los escenarios*/
-                        composable("welcome") {
-                            WelcomeScreen(
-                                onNavigateToLogin = {
-                                    navController.navigate("login")
-                                }
-                            )
-                        }
-
-                        composable("register") {
-                            RegisterScreen(
-                                onBack = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
-
+                        composable("welcome") { WelcomeScreen(onNavigateToLogin = { navController.navigate("login") }) }
+                        composable("register") { RegisterScreen(onBack = { navController.popBackStack() }) }
                         composable("login"){
                             LoginScreen(
                                 onLoginSuccess = {
@@ -73,33 +42,38 @@ class MainActivity : ComponentActivity() {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 },
-                                onNavigateToRegister = {
-                                    navController.navigate("register")
-                                }
+                                onNavigateToRegister = { navController.navigate("register") }
                             )
                         }
-
-                        composable("home") {
-                            HomeScreen(navController) // <-- Le pasas el navController a tu pantalla principal
+                        composable("home") { HomeScreen(navController) }
+                        composable("settings") { SettingsScreen(navController = navController) }
+                        composable("account_options") { AccountOptionsScreen(navController = navController) }
+                        composable("change_email") { ChangeEmailScreen(navController = navController) }
+                        composable("change_password") { ChangePasswordScreen(navController = navController) }
+                        composable("my_cards") { MyCardsScreen(navController = navController) }
+                        composable("addresses") { AddressesScreen(navController = navController) }
+                        composable("add_edit_address") { AddEditAddressScreen(navController = navController) }
+                        composable("change_address") { ChangeAddressScreen(navController = navController) }
+                        composable("delete_address") { DeleteAddressScreen(navController = navController) }
+                        composable("favorites") { FavoritesScreen(navController = navController) }
+                        composable("past_orders") { PastOrdersScreen(navController = navController) }
+                        composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
+                        composable("notifications") { NotificationsScreen(navController = navController) }
+                        composable("help") { HelpScreen(navController = navController) }
+                        composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
+                        composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
+                        composable("logout") {
+                            navController.navigate("login") {
+                                popUpTo("home") { inclusive = true }
+                            }
                         }
-
-                        composable ("product"){
-                            Text(text = "Pantalla de productos de NextByte")
-                        }
-
-                        // Ruta hacia los productos "Para ver los detalles." ---
+                        composable("product"){ Text(text = "Pantalla de productos de NextByte") }
                         composable(
                             route = "product_detail_route/{productId}",
-                            arguments = listOf(
-                                navArgument("productId") {
-                                    type = NavType.IntType
-                                }
-                            )
+                            arguments = listOf(navArgument("productId") { type = NavType.IntType })
                         ) { backStackEntry ->
-                            // Extrae el ID del producto de los argumentos de navegación
                             val productId = backStackEntry.arguments?.getInt("productId")
                             if (productId != null) {
-                                // Llama a la pantalla de detalle, pasándole el ID
                                 ProductDetailScreen(productId = productId)
                             } else {
                                 Text(text = "Error: Producto no encontrado.")

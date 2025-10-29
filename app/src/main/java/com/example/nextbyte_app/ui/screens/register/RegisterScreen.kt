@@ -3,6 +3,7 @@ package com.example.nextbyte_app.ui.screens.register
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -91,7 +92,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        //MODIFICAR COLORES DE LOS CAMPOS DE TXT Y BOTON
+
         TextField(
             value = email,
             onValueChange = { newEmail -> email = newEmail },
@@ -116,7 +117,7 @@ fun RegisterScreen(
             label = {Text("Contraseña")},
             modifier = Modifier.fillMaxWidth(),
             colors = customTextFieldColors,
-            singleLine = true,
+            singleLine = true, // Solo una línea de texto para la contraseña
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             isError = isPasswordMismatch // Para que ambos se marquen en rojo
@@ -160,12 +161,12 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                // 1. Validar campos vacíos
-                if (email.isEmpty() || password.isEmpty() || number.isEmpty()) {
+                // 1. Valida campos vacíos antes de registrar
+                if (email.isEmpty() || password.isEmpty() || number.isEmpty() || confirmPassword.isEmpty()) {
 
                     /*El toast es un mensaje de retroalimentacion para el usuario,
                     * donde se le notificara si su accion ha terminado o fallo sin
-                    * interrumpir la funcionalidad.*/ //
+                    * interrumpir la funcionalidad.*/
                     // Notificación de error si algún campo está vacío
                     Toast.makeText(
                         context,
@@ -175,7 +176,7 @@ fun RegisterScreen(
                     return@Button
                 }
 
-                // 2. Validar formato de email
+                // 2. Valida formato de email
                 if (isEmailError) {
                     Toast.makeText(
                         context,
@@ -185,7 +186,17 @@ fun RegisterScreen(
                     return@Button
                 }
 
-                // 3. Si todo está bien, registrar
+
+                if (isPasswordMismatch) { //
+                    Toast.makeText(
+                        context,
+                        "Las contraseñas no coinciden.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@Button
+                }
+
+                // 4. Si todo está bien, registrar
                 BdFake.registeredEmail = email
                 BdFake.registeredPassword = password
                 BdFake.registeredNumber = number
@@ -199,13 +210,41 @@ fun RegisterScreen(
 
                 onBack() //Volvemos al login para iniciar sesion
             },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9400D3)
-            )
+
+
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp), // Altura del botón
+            shape = RoundedCornerShape(25.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = PaddingValues() // Padding interno para centrar el texto
         ) {
-            Text("Registrarse")
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFFFFD700), // Dorado
+                                Color(0xFFFFA500)  // Naranja
+                            )
+                        ),
+                        shape = RoundedCornerShape(25.dp)
+                    )
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Registrarse",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White // Texto blanco, como en tu ejemplo
+                )
+            }
         }
+
+
+
 
         Spacer(modifier = Modifier.height(8.dp))
 

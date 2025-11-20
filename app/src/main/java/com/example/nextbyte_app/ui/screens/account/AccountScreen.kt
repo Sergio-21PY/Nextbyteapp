@@ -1,6 +1,5 @@
 package com.example.nextbyte_app.ui.screens.account
 
-// Imports corregidos y ordenados
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,15 +58,9 @@ data class User(
 @Composable
 fun AccountScreen(navController: NavController) {
     // --- SIMULACIÓN DE INICIO DE SESIÓN ---
-    // Prueba con el admin:
+    // admin:
     val loginEmail by remember { mutableStateOf("admin@admin.cl") }
     val loginPassword by remember { mutableStateOf("1234") }
-
-    // O prueba con el usuario (descomenta estas líneas y comenta las de arriba):
-    // val loginEmail by remember { mutableStateOf("user@user.cl") }
-    // val loginPassword by remember { mutableStateOf("1234") }
-
-
     // --- LÓGICA PARA DETERMINAR EL TIPO DE USUARIO ---
     val currentUser: User? = when {
         loginEmail == "admin@admin.cl" && loginPassword == "1234" -> {
@@ -83,7 +76,7 @@ fun AccountScreen(navController: NavController) {
 
     // Solo mostramos el contenido si el inicio de sesión fue "exitoso"
     if (currentUser != null) {
-        // ¡IMPORTANTE! Asegúrate de que estos nombres coincidan con tus archivos de imagen
+
         val profileImageRes = if (currentUser.isAdmin) {
             R.drawable.img // Cambia "img" si tu archivo se llama diferente (ej: logo_admin)
         } else {
@@ -100,20 +93,16 @@ fun AccountScreen(navController: NavController) {
             ProfileHeader(user = currentUser, profileImageRes = profileImageRes)
             Spacer(modifier = Modifier.height(32.dp))
             SettingsSection(user = currentUser, navController = navController)
-            // Este Spacer usa el weight correcto de foundation.layout
             Spacer(modifier = Modifier.weight(1f))
             LogoutButton {
-                // Lógica para cerrar sesión
             }
         }
     } else {
-        // Muestra un mensaje si el login falla.
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Error: Credenciales incorrectas.")
         }
     }
 }
-
 @Composable
 fun ProfileHeader(user: User, profileImageRes: Int) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

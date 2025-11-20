@@ -26,8 +26,8 @@ import androidx.navigation.NavController
 fun AddressesScreen(navController: NavController) {
     val addressOptions = listOf(
         AccountOption("Agregar dirección", Icons.Default.AddLocationAlt) { navController.navigate("add_edit_address") },
-        AccountOption("Cambiar dirección", Icons.Default.EditLocation) { navController.navigate("select_change_address") },
-        AccountOption("Eliminar dirección", Icons.Default.WrongLocation) { navController.navigate("select_delete_address") }
+        AccountOption("Cambiar dirección", Icons.Default.EditLocation) { navController.navigate("change_address") },
+        AccountOption("Eliminar dirección", Icons.Default.WrongLocation) { navController.navigate("delete_address") }
     )
 
     Scaffold(

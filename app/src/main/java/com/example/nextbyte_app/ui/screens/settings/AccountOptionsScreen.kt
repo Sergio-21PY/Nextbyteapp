@@ -16,7 +16,7 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,25 +24,28 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.nextbyte_app.ui.screens.BdFake
 
 data class AccountOption(val title: String, val icon: ImageVector, val onClick: () -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountOptionsScreen(navController: NavController) {
+    var showDialog by remember { mutableStateOf(false) }
+
     val options = listOf(
         AccountOption("Cambiar correo electrónico", Icons.Default.Email) { navController.navigate("change_email") },
         AccountOption("Cambiar contraseña", Icons.Default.Lock) { navController.navigate("change_password") },
-        AccountOption("Direcciones", Icons.Default.LocationOn) { navController.navigate("addresses") },
-        AccountOption("Seguridad", Icons.Default.Security) { navController.navigate("security") },
-        AccountOption("Eliminar cuenta", Icons.Default.DeleteForever) { navController.navigate("delete_account") }
+        AccountOption("Direcciones", Icons.Default.LocationOn) { navController.navigate("address_flow") },
+        AccountOption("Eliminar cuenta", Icons.Default.DeleteForever) { showDialog = true }
     )
 
     Scaffold(
@@ -67,6 +70,33 @@ fun AccountOptionsScreen(navController: NavController) {
                 AccountOptionItem(option = option)
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
             }
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Confirmar eliminación") },
+                text = { Text("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDialog = false
+                            // Llama a la función para borrar los datos
+                            BdFake.deleteAccount()
+                            navController.navigate("login") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                        }
+                    ) {
+                        Text("Sí, eliminar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("No, cancelar")
+                    }
+                }
+            )
         }
     }
 }

@@ -9,4 +9,10 @@ object BdFake {
    //Cuenta de administrador, ver mas adelante.
     const val DEFAULT_EMAIL = "test@nextbyte.cl"
     const val DEFAULT_PASSWORD = "123"
+
+    fun deleteAccount() {
+        registeredEmail = ""
+        registeredPassword = ""
+        registeredNumber = ""
+    }
 }

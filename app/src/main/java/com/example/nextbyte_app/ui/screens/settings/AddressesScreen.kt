@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddLocationAlt
-import androidx.compose.material.icons.filled.EditLocation
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.WrongLocation
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,8 +25,8 @@ import androidx.navigation.NavController
 @Composable
 fun AddressesScreen(navController: NavController) {
     val addressOptions = listOf(
-        AccountOption("Agregar dirección", Icons.Default.AddLocationAlt) { navController.navigate("add_edit_address") },
-        AccountOption("Cambiar dirección", Icons.Default.EditLocation) { navController.navigate("change_address") },
+        AccountOption("Añadir dirección", Icons.Default.AddLocationAlt) { navController.navigate("add_edit_address") },
+        AccountOption("Ver dirección", Icons.Default.LocationOn) { navController.navigate("view_address") },
         AccountOption("Eliminar dirección", Icons.Default.WrongLocation) { navController.navigate("delete_address") }
     )
 

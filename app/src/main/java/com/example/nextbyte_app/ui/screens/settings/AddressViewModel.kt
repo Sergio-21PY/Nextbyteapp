@@ -4,20 +4,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 class AddressViewModel : ViewModel() {
-    val addresses = mutableStateOf(listOf("Dirección 1", "Dirección 2", "Dirección 3"))
+    // Solo una dirección, que puede ser nula si no existe
+    val address = mutableStateOf<String?>(null) // Comienza vacía
 
-    fun updateAddress(oldAddress: String, newAddress: String) {
-        val index = addresses.value.indexOf(oldAddress)
-        if (index != -1) {
-            val newList = addresses.value.toMutableList()
-            newList[index] = newAddress
-            addresses.value = newList
-        }
+    fun updateAddress(newAddress: String) {
+        address.value = newAddress
     }
 
-    fun deleteAddress(address: String) {
-        val newList = addresses.value.toMutableList()
-        newList.remove(address)
-        addresses.value = newList
+    fun addAddress(newAddress: String) {
+        address.value = newAddress
+    }
+
+    fun deleteAddress() {
+        address.value = null
     }
 }

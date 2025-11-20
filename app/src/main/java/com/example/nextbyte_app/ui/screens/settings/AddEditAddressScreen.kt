@@ -19,15 +19,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEditAddressScreen(navController: NavController) {
+fun AddEditAddressScreen(navController: NavController, addressViewModel: AddressViewModel = viewModel()) {
     var street by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var postalCode by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }
+    var region by remember { mutableStateOf("") }
+    var comuna by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -55,28 +55,25 @@ fun AddEditAddressScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = city,
-                onValueChange = { city = it },
-                label = { Text("Ciudad") },
+                value = region,
+                onValueChange = { region = it },
+                label = { Text("Región") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = postalCode,
-                onValueChange = { postalCode = it },
-                label = { Text("Código postal") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = country,
-                onValueChange = { country = it },
-                label = { Text("País") },
+                value = comuna,
+                onValueChange = { comuna = it },
+                label = { Text("Comuna") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* TODO: Implement save address logic */ },
+                onClick = {
+                    val newAddress = "$street, $comuna, $region"
+                    addressViewModel.addAddress(newAddress)
+                    navController.popBackStack()
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar dirección")

@@ -8,12 +8,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.example.nextbyte_app.ui.screens.ProductDetailScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
@@ -51,10 +59,23 @@ class MainActivity : ComponentActivity() {
                         composable("change_email") { ChangeEmailScreen(navController = navController) }
                         composable("change_password") { ChangePasswordScreen(navController = navController) }
                         composable("my_cards") { MyCardsScreen(navController = navController) }
-                        composable("addresses") { AddressesScreen(navController = navController) }
-                        composable("add_edit_address") { AddEditAddressScreen(navController = navController) }
-                        composable("change_address") { ChangeAddressScreen(navController = navController) }
-                        composable("delete_address") { DeleteAddressScreen(navController = navController) }
+
+                        navigation(startDestination = "addresses", route = "address_flow") {
+                            composable("addresses") { AddressesScreen(navController = navController) }
+                            composable("add_edit_address") { backStackEntry ->
+                                val addressViewModel = backStackEntry.sharedViewModel<AddressViewModel>(navController)
+                                AddEditAddressScreen(navController, addressViewModel)
+                            }
+                            composable("view_address") { backStackEntry ->
+                                val addressViewModel = backStackEntry.sharedViewModel<AddressViewModel>(navController)
+                                ViewAddressScreen(navController, addressViewModel)
+                            }
+                            composable("delete_address") { backStackEntry ->
+                                val addressViewModel = backStackEntry.sharedViewModel<AddressViewModel>(navController)
+                                DeleteAddressScreen(navController, addressViewModel)
+                            }
+                        }
+
                         composable("favorites") { FavoritesScreen(navController = navController) }
                         composable("past_orders") { PastOrdersScreen(navController = navController) }
                         composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
@@ -84,4 +105,13 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Composable
+inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
+    val navGraphRoute = destination.parent?.route ?: return viewModel()
+    val parentEntry = remember(this) {
+        navController.getBackStackEntry(navGraphRoute)
+    }
+    return viewModel(parentEntry)
 }

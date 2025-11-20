@@ -13,36 +13,27 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChangeAddressScreen(navController: NavController, addressViewModel: AddressViewModel = viewModel()) {
-    val existingAddress = addressViewModel.address.value
-
-    // Separa la dirección en sus componentes
-    val parts = existingAddress?.split(", ") ?: listOf("", "", "")
-    var street by remember { mutableStateOf(parts.getOrNull(0) ?: "") }
-    var comuna by remember { mutableStateOf(parts.getOrNull(1) ?: "") }
-    var region by remember { mutableStateOf(parts.getOrNull(2) ?: "") }
+fun ViewAddressScreen(navController: NavController, addressViewModel: AddressViewModel = viewModel()) {
+    val address = addressViewModel.address.value
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cambiar Dirección") },
+                title = { Text("Ver Dirección") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -59,37 +50,20 @@ fun ChangeAddressScreen(navController: NavController, addressViewModel: AddressV
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (existingAddress != null) {
-                OutlinedTextField(
-                    value = street,
-                    onValueChange = { street = it },
-                    label = { Text("Calle y número") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = comuna,
-                    onValueChange = { comuna = it },
-                    label = { Text("Comuna") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = region,
-                    onValueChange = { region = it },
-                    label = { Text("Región") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { 
-                        val newAddress = "$street, $comuna, $region"
-                        addressViewModel.updateAddress(newAddress)
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Guardar Cambios")
+            if (address != null) {
+                val parts = address.split(", ").map { it.trim() }
+                val street = parts.getOrNull(0) ?: ""
+                val comuna = parts.getOrNull(1) ?: ""
+                val region = parts.getOrNull(2) ?: ""
+
+                Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                    Text("Tu dirección guardada:", style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AddressDetailRow("Calle y número:", street)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AddressDetailRow("Comuna:", comuna)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AddressDetailRow("Región:", region)
                 }
             } else {
                 Text("Aún no tiene dirección agregada.")
@@ -101,5 +75,22 @@ fun ChangeAddressScreen(navController: NavController, addressViewModel: AddressV
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AddressDetailRow(label: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 4.dp)
+        )
     }
 }

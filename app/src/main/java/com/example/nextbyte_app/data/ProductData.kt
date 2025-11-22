@@ -5,7 +5,8 @@ data class Product(
     val name: String,
     val description: String,
     val price: Int,
-    val imageResId: Int // La imagen grande del producto
+    val imageResId: Int, // La imagen grande del producto
+    var isFavorited: Boolean = false
 )
 
 // Tu "base de datos" de productos.

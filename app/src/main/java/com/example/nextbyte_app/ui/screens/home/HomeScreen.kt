@@ -1,10 +1,11 @@
+package com.example.nextbyte_app.ui.screens.home
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -14,6 +15,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.nextbyte_app.data.Product
+import com.example.nextbyte_app.ui.screens.AppDestinations
+import com.example.nextbyte_app.ui.screens.ECommerceBottomBar
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.account.AccountScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
@@ -21,8 +25,11 @@ import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
 import com.example.nextbyte_app.ui.shared.MainTopBar
 
 @Composable
-fun HomeScreen(navController: NavController) {
-
+fun HomeScreen(
+    navController: NavController,
+    products: List<Product>,
+    onFavoriteClick: (Product) -> Unit
+) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -39,20 +46,18 @@ fun HomeScreen(navController: NavController) {
         topBar = {
             MainTopBar(
                 title = title,
-                onSettingsClick = { navController.navigate("settings") } // Navega a la nueva pantalla
+                onSettingsClick = { navController.navigate("settings") }
             )
         },
         bottomBar = {
             ECommerceBottomBar(navController = bottomNavController)
         }
     ) { paddingValues ->
-
         NavHost(
             navController = bottomNavController,
             startDestination = AppDestinations.Home.route,
             modifier = Modifier.padding(paddingValues)
         ) {
-
             composable(AppDestinations.Home.route) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
@@ -70,7 +75,11 @@ fun HomeScreen(navController: NavController) {
             }
 
             composable(AppDestinations.Productos.route) {
-                ProductosScreen(navController = navController)
+                ProductosScreen(
+                    navController = navController,
+                    products = products,
+                    onFavoriteClick = onFavoriteClick
+                )
             }
 
             composable(AppDestinations.Cart.route) {

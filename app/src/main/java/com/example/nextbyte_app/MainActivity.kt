@@ -1,6 +1,5 @@
 package com.example.nextbyte_app
 
-import HomeScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,20 +8,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.nextbyte_app.data.Product
+import com.example.nextbyte_app.data.allProducts
+import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.ProductDetailScreen
+import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
@@ -36,6 +41,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             NextbyteappTheme {
                 val navController = rememberNavController()
+                var products by remember { mutableStateOf(allProducts) }
+                val onFavoriteClick: (Product) -> Unit = { product ->
+                    val index = products.indexOfFirst { it.id == product.id }
+                    if (index != -1) {
+                        products = products.toMutableList().also {
+                            it[index] = it[index].copy(isFavorited = !it[index].isFavorited)
+                        }
+                    }
+                }
+
                 Surface(modifier = Modifier.fillMaxSize()) {
                     NavHost(
                         navController = navController,
@@ -53,7 +68,8 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRegister = { navController.navigate("register") }
                             )
                         }
-                        composable("home") { HomeScreen(navController) }
+                        composable("home") { HomeScreen(navController, products, onFavoriteClick) }
+                        composable("favorites") { FavoritosScreen(navController = navController, products = products, onFavoriteClick = onFavoriteClick) }
                         composable("settings") { SettingsScreen(navController = navController) }
                         composable("account_options") { AccountOptionsScreen(navController = navController) }
                         composable("change_email") { ChangeEmailScreen(navController = navController) }
@@ -76,7 +92,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable("favorites") { FavoritesScreen(navController = navController) }
                         composable("past_orders") { PastOrdersScreen(navController = navController) }
                         composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                         composable("notifications") { NotificationsScreen(navController = navController) }

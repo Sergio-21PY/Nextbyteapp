@@ -1,3 +1,5 @@
+package com.example.nextbyte_app.ui.screens
+
 import android.Manifest
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,7 +30,6 @@ sealed class AppDestinations(val route: String, val icon: ImageVector, val label
     /*Utulizamos el data object para que cada instancia sea unica.*/
     data object Home : AppDestinations("home_route", Icons.Default.Home, "Home")
     data object Productos : AppDestinations("productos_route", Icons.Default.Category, "Productos")
-
     data object Camera : AppDestinations("camera_route", Icons.Default.PhotoCamera, "Cámara")
     data object Cart : AppDestinations("cart_route", Icons.Default.ShoppingCart, "Cart")
     data object Account : AppDestinations("account_route", Icons.Default.AccountCircle, "Account")

@@ -1,5 +1,6 @@
 package com.example.nextbyte_app.ui.screens.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -28,6 +30,7 @@ fun ChangePasswordScreen(navController: NavController) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -52,7 +55,8 @@ fun ChangePasswordScreen(navController: NavController) {
                 onValueChange = { currentPassword = it },
                 label = { Text("Contraseña actual") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -60,7 +64,8 @@ fun ChangePasswordScreen(navController: NavController) {
                 onValueChange = { newPassword = it },
                 label = { Text("Nueva contraseña") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -68,11 +73,26 @@ fun ChangePasswordScreen(navController: NavController) {
                 onValueChange = { confirmPassword = it },
                 label = { Text("Confirmar nueva contraseña") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* TODO: Implement password change logic */ },
+                onClick = {
+                    when {
+                        currentPassword.isBlank() || newPassword.isBlank() || confirmPassword.isBlank() -> {
+                            Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+                        }
+                        newPassword != confirmPassword -> {
+                            Toast.makeText(context, "Las nuevas contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            // Lógica de guardado simulada
+                            Toast.makeText(context, "Contraseña actualizada con éxito", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar contraseña")

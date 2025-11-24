@@ -5,7 +5,8 @@
     <!-- Permisos para utilizar la camara en android.-->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <!-- Permisos para utilizar la camara en android.-->
+    <!-- Permiso para enviar notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 
     <application

@@ -59,6 +59,13 @@ fun AboutNextByteScreen(navController: NavController) {
                 )
             }
 
+            item { SectionTitle(title = "Nuestros Valores") }
+            item {
+                SectionParagraph(
+                    text = "• Calidad: Solo ofrecemos productos que nosotros mismos usaríamos.\n• Pasión: Nos mueve el amor por la tecnología y la innovación.\n• Comunidad: Construimos un espacio para que los entusiastas compartan y crezcan juntos.\n• Servicio: Tu satisfacción es la razón de nuestro trabajo."
+                )
+            }
+
             item { SectionTitle(title = "Nuestra Historia") }
             item {
                 SectionParagraph(

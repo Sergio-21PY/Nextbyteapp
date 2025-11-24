@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -99,8 +100,11 @@ class MainActivity : ComponentActivity() {
                         composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                         composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
                         composable("logout") {
-                            navController.navigate("login") {
-                                popUpTo("home") { inclusive = true }
+                            navController.navigate("welcome") {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
                             }
                         }
                         composable("product"){ Text(text = "Pantalla de productos de NextByte") }

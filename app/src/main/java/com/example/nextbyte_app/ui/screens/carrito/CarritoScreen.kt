@@ -1,6 +1,7 @@
 package com.example.nextbyte_app.ui.screens.carrito
 
 // Imports de Data
+import android.widget.Toast
 import com.example.nextbyte_app.data.CartItem
 import com.example.nextbyte_app.data.Product
 
@@ -44,51 +45,28 @@ import coil.request.ImageRequest
 @Composable
 fun CarritoScreen(
     navController: NavController,
-
-
-    /*Forzamos que el ViewModel "pertenezca" a la MISMA Actividad principal,
-    * con viewModelStoreOwner decimos quien es el dueño de la informacion, en este caso
-    * cartViewModel que es la logica del carrito.*/
     cartViewModel: CartViewModel = viewModel(
         viewModelStoreOwner = LocalContext.current as ComponentActivity
     )
-
 ) {
-
-    //Obtiene la lista y el total directamente del ViewModel
     val cartItems: List<CartItem> = cartViewModel.cartItems
-    val total = cartViewModel.total
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Header simple
+    Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "🛒 MI CARRITO",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Text(text = "🛒 MI CARRITO", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         }
 
         if (cartItems.isEmpty()) {
             EmptyCartState()
         } else {
-            // Lista de items
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.8f) // 80% del espacio
-            ) {
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 items(cartItems, key = { it.product.id }) { cartItem ->
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         CartItemCard(
                             cartItem = cartItem,
                             onUpdateQuantity = cartViewModel::updateQuantity,
@@ -97,16 +75,46 @@ fun CarritoScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+                item {
+                    DiscountSection(cartViewModel = cartViewModel)
+                }
             }
-
-            // Sección de Checkout
             CheckoutSection(
-                total = total,
+                subtotal = cartViewModel.total,
+                discount = cartViewModel.discountAmount,
+                total = cartViewModel.finalTotal,
                 onCheckout = cartViewModel::processCheckout
             )
         }
     }
 }
+
+@Composable
+fun DiscountSection(cartViewModel: CartViewModel) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = cartViewModel.discountCode,
+            onValueChange = { cartViewModel.discountCode = it },
+            label = { Text("Código de descuento") },
+            modifier = Modifier.weight(1f),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Button(onClick = {
+            val message = cartViewModel.applyDiscountCode()
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }) {
+            Text("Aplicar")
+        }
+    }
+}
+
 
 /**
  * Estado cuando el carrito está vacío
@@ -280,6 +288,8 @@ fun QuantitySelector(
  */
 @Composable
 fun CheckoutSection(
+    subtotal: Int,
+    discount: Int,
     total: Int,
     onCheckout: () -> Unit
 ) {
@@ -296,10 +306,21 @@ fun CheckoutSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Subtotal:")
-                Text(formatPrice(total))
+                Text(formatPrice(subtotal))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            if (discount > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Descuento (PROMO20):")
+                    Text("-${formatPrice(discount)}", color = MaterialTheme.colorScheme.primary)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -340,7 +361,7 @@ fun CheckoutSection(
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("PROCEDER AL CHECKOUT")
+                Text("PAGAR")
             }
         }
     }

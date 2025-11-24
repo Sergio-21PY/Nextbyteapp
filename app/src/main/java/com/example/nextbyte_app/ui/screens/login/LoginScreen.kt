@@ -1,185 +1,102 @@
 package com.example.nextbyte_app.ui.screens.login
-import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.nextbyte_app.ui.screens.BdFake
-
+import androidx.navigation.NavController
+import com.example.nextbyte_app.repository.FirebaseRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    /*Se añaden los parametros para navegar entre las pantallas.*/
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit = {}
+    onNavigateToRegister: () -> Unit
 ) {
-    // Estados para los TextField
-    val emailState = remember { mutableStateOf("") }
-    val passwordState = remember { mutableStateOf("") }
-    val context = LocalContext.current
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF6A0DAD),
-                        Color(0xFF4B0082)
-                    )
-                )
-            ),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center // Lo centras en la pantalla
+        verticalArrangement = Arrangement.Center
     ) {
-
-
         Text(
             text = "Iniciar Sesión",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color.White
+            style = MaterialTheme.typography.headlineLarge
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        //Utilizar el padding(horizontal) tiene una mejor adaptacion en app moviles.
+        // Mostrar mensaje de error si existe
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
 
-        TextField(
-            value = emailState.value,
-            onValueChange = { emailState.value = it },
-            label = { Text("Correo electrónico", color = Color.Black) },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                unfocusedTextColor = Color.Black,
-                focusedTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            modifier = Modifier
-                .padding(horizontal = 32.dp)
-                .fillMaxWidth(), //
-            shape = RoundedCornerShape(12.dp)
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp)) // Espaciado entre los campos
+        Spacer(modifier = Modifier.height(16.dp))
 
-        TextField(
-            value = passwordState.value,
-            onValueChange = { passwordState.value = it },
-            label = { Text("Contraseña", color = Color.Black) },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                unfocusedTextColor = Color.Black,
-                focusedTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            /*Caracter visual de contraseña: 13/10/2025*/
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .padding(horizontal = 32.dp) //Margen de 32dp a los lados
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // Boton de iniciar sesion.
         Button(
-            //Usamos el parámetro onLoginSuccess
             onClick = {
-                val inputEmail = emailState.value
-                val inputPassword = passwordState.value
-
-                if (inputEmail == BdFake.registeredEmail && inputPassword == BdFake.registeredPassword){
-                    Toast.makeText(context, "¡Acceso Exitoso! Bienvenido.", Toast.LENGTH_SHORT).show()
-                    onLoginSuccess()
-
-                }else{
-                    Toast.makeText(
-                        context,
-                        "Credenciales incorrectas. Intenta con: ${BdFake.registeredEmail}",
-                        Toast.LENGTH_LONG
-                    ).show()
-
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    isLoading = true
+                    errorMessage = ""
+                    scope.launch {
+                        val repository = FirebaseRepository()
+                        val success = repository.loginUser(email, password)
+                        isLoading = false
+                        if (success) {
+                            onLoginSuccess()
+                        } else {
+                            errorMessage = "Error al iniciar sesión. Verifica tus credenciales."
+                        }
+                    }
+                } else {
+                    errorMessage = "Por favor, completa todos los campos."
                 }
-
-
             },
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(50.dp),
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
         ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFFFFD700),
-                                Color(0xFFFFA500)
-                            )
-                        ),
-                        shape = RoundedCornerShape(25.dp)
-                    )
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Iniciar sesión",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+            } else {
+                Text("Iniciar Sesión")
             }
         }
 
-        // Espaciador entre el botón y el texto clicable
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Texto con click, fuera del boton
-        Text(
-            text = "¿No tienes una cuenta? Regístrate aquí",
-            modifier = Modifier
-                .clickable {
-                    //Usamos onNavigateToRegister
-                    onNavigateToRegister()
-                }
-                .padding(8.dp),
-
-            color = Color.White,
-            textDecoration = TextDecoration.Underline
-        )
+        TextButton(onClick = onNavigateToRegister) {
+            Text("¿No tienes cuenta? Regístrate")
+        }
     }
 }

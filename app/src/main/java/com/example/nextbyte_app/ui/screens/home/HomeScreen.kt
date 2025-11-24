@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,6 @@ import com.example.nextbyte_app.ui.shared.MainTopBar
 @Composable
 fun HomeScreen(
     navController: NavController,
-    products: List<Product>,
     onFavoriteClick: (Product) -> Unit
 ) {
     val bottomNavController = rememberNavController()
@@ -77,7 +77,6 @@ fun HomeScreen(
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
                     navController = navController,
-                    products = products,
                     onFavoriteClick = onFavoriteClick
                 )
             }

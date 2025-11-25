@@ -58,13 +58,9 @@ class FirebaseRepository {
     // Iniciar sesión
     suspend fun loginUser(email: String, password: String): Boolean {
         return try {
-            Log.d("FirebaseRepository", "Intentando login: $email")
-            val authResult = auth.signInWithEmailAndPassword(email, password).await()
-            val user = authResult.user
-            Log.d("FirebaseRepository", "Login exitoso: ${user?.email}")
+            auth.signInWithEmailAndPassword(email, password).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error en login: ${e.message}")
             false
         }
     }

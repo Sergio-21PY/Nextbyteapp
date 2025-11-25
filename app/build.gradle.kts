@@ -94,6 +94,7 @@ dependencies {
     // Corrutinas para Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation(libs.androidx.foundation)
 
     // Testing
     testImplementation(libs.junit)

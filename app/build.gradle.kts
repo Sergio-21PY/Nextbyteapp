@@ -37,6 +37,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-Xskip-prerelease-check"
+        ).toTypedArray()
     }
     buildFeatures {
         compose = true

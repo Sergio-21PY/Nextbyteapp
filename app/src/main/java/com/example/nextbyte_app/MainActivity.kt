@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         composable("past_orders") { PastOrdersScreen(navController = navController) }
                         composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                         composable("notifications") { NotificationsScreen(navController = navController) }
-                        composable("help") { HelpScreen(navController = navController) }
+                        composable("faq") { FaqScreen(navController = navController) }
                         composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                         composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
                         composable("logout") {

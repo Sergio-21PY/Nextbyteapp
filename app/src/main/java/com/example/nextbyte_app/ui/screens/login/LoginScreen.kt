@@ -49,7 +49,8 @@ fun LoginScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = true  // ← Asegurar que esté habilitado
         )
 
         Spacer(modifier = Modifier.height(16.dp))

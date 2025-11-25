@@ -89,17 +89,27 @@ fun RegisterScreen(
             onClick = {
                 if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                     if (password == confirmPassword) {
-                        isLoading = true
-                        errorMessage = ""
-                        scope.launch {
-                            val repository = FirebaseRepository()
-                            val success = repository.registerUser(email, password, name)
-                            isLoading = false
-                            if (success) {
-                                onRegisterSuccess()
-                            } else {
-                                errorMessage = "Error al registrar usuario. Intenta nuevamente."
+                        if (password.length >= 6) {
+                            isLoading = true
+                            errorMessage = ""
+                            scope.launch {
+                                try {
+                                    val repository = FirebaseRepository()
+                                    val success = repository.registerUser(email, password, name)
+                                    if (success) {
+                                        onRegisterSuccess()
+                                    } else {
+                                        errorMessage = "Error al registrar. Verifica tu conexión o intenta con otro email."
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = "Error: ${e.message ?: "Error desconocido"}"
+                                    android.util.Log.e("RegisterScreen", "Error completo en registro", e)
+                                } finally {
+                                    isLoading = false
+                                }
                             }
+                        } else {
+                            errorMessage = "La contraseña debe tener al menos 6 caracteres."
                         }
                     } else {
                         errorMessage = "Las contraseñas no coinciden."

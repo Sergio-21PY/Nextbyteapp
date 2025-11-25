@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
@@ -141,7 +140,6 @@ fun SettingsSection(user: User, navController: NavController) {
             SettingsItem(icon = Icons.Default.Edit, title = "Editar Perfil") { /* Navigar */ }
             SettingsItem(icon = Icons.Default.CreditCard, title = "Métodos de Pago") { /* Navigar */ }
             SettingsItem(icon = Icons.Default.Security, title = "Seguridad") { /* Navigar */ }
-            SettingsItem(icon = Icons.Default.HelpOutline, title = "Ayuda y Soporte") { /* Navigar */ }
 
             if (user.isAdmin) {
                 AdminSettings()

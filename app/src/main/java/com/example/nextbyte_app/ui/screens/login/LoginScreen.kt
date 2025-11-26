@@ -1,151 +1,221 @@
 package com.example.nextbyte_app.ui.screens.login
 
-import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.nextbyte_app.data.FakeCredentials // ¡CORREGIDO!
-import com.example.nextbyte_app.ui.screens.account.UserViewModel
+import com.example.nextbyte_app.repository.FirebaseRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit = {},
-    userViewModel: UserViewModel
+    onNavigateToRegister: () -> Unit
 ) {
-    val emailState = remember { mutableStateOf("") }
-    val passwordState = remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF6A0DAD), Color(0xFF4B0082))
-                )
-            ),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Iniciar Sesión",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        TextField(
-            value = emailState.value,
-            onValueChange = { emailState.value = it },
-            label = { Text("Correo electrónico", color = Color.Black) },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                unfocusedTextColor = Color.Black,
-                focusedTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            modifier = Modifier
-                .padding(horizontal = 32.dp)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextField(
-            value = passwordState.value,
-            onValueChange = { passwordState.value = it },
-            label = { Text("Contraseña", color = Color.Black) },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                unfocusedTextColor = Color.Black,
-                focusedTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .padding(horizontal = 32.dp)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+        // Logo o icono de la app
+        Icon(
+            imageVector = Icons.Default.Email,
+            contentDescription = "NextByte Logo",
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        Text(
+            text = "Bienvenido a NextByte",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Iniciar Sesión",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Mostrar mensaje de error si existe
+        if (errorMessage.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        // Campo de email
+        OutlinedTextField(
+            value = email,
+            onValueChange = {
+                email = it
+                if (errorMessage.isNotEmpty()) errorMessage = ""
+            },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = errorMessage.isNotEmpty()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de contraseña
+        OutlinedTextField(
+            value = password,
+            onValueChange = {
+                password = it
+                if (errorMessage.isNotEmpty()) errorMessage = ""
+            },
+            label = { Text("Contraseña") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            isError = errorMessage.isNotEmpty()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Enlace para recuperar contraseña (opcional)
+        TextButton(
+            onClick = { /* TODO: Implementar recuperación de contraseña */ },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("¿Olvidaste tu contraseña?")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Botón de iniciar sesión
         Button(
             onClick = {
-                val email = emailState.value
-                val password = passwordState.value
-                // Ahora el ViewModel se encarga de la lógica, pero la puede obtener de FakeCredentials
-                if (userViewModel.login(email, password)) {
-                    Toast.makeText(context, "¡Acceso Exitoso! Bienvenido.", Toast.LENGTH_SHORT).show()
-                    onLoginSuccess()
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    if (isValidEmail(email)) {
+                        isLoading = true
+                        errorMessage = ""
+                        scope.launch {
+                            try {
+                                val repository = FirebaseRepository()
+                                val success = repository.loginUser(email, password)
+                                if (success) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage = "Error al iniciar sesión. Verifica tus credenciales."
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = "Error de conexión. Intenta nuevamente."
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    } else {
+                        errorMessage = "Por favor, ingresa un email válido."
+                    }
                 } else {
-                    // Podemos usar la data de FakeCredentials para dar una pista
-                    Toast.makeText(
-                        context,
-                        "Credenciales incorrectas. Intenta con: ${FakeCredentials.DEFAULT_EMAIL}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    errorMessage = "Por favor, completa todos los campos."
                 }
             },
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(50.dp),
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues()
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
+            shape = MaterialTheme.shapes.medium
         ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
-                        ),
-                        shape = RoundedCornerShape(25.dp)
-                    )
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
                 Text(
-                    text = "Iniciar sesión",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    text = "Iniciar Sesión",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "¿No tienes una cuenta? Regístrate aquí",
+        // Divisor
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Divider(modifier = Modifier.weight(1f))
+            Text(
+                text = "O",
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+            Divider(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Botón para registrar
+        OutlinedButton(
+            onClick = onNavigateToRegister,
             modifier = Modifier
-                .clickable { onNavigateToRegister() }
-                .padding(8.dp),
-            color = Color.White,
-            textDecoration = TextDecoration.Underline
-        )
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Text("Crear una cuenta nueva")
+        }
+
+        // Texto alternativo
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(onClick = onNavigateToRegister) {
+            Text("¿No tienes cuenta? Regístrate aquí")
+        }
     }
+}
+
+// Función de validación de email
+private fun isValidEmail(email: String): Boolean {
+    val emailRegex = "^[A-Za-z](.*)([@]{1})(.{1,})(\\.)(.{1,})".toRegex()
+    return email.matches(emailRegex)
 }

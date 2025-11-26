@@ -2,6 +2,7 @@ package com.example.nextbyte_app.ui.screens.account
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.example.nextbyte_app.data.FakeCredentials // ¡IMPORTADO!
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,25 +29,40 @@ class UserViewModel : ViewModel() {
     }
 
     fun login(email: String, pass: String): Boolean {
-        if (email == "admin@admin.cl" && pass == "1234") {
-            _user.value = UserState(
-                name = "Administrador",
-                email = "admin@admin.cl",
-                profileImageUri = null,
-                isAdmin = true
-            )
-            return true
-        } else if (email == "user@user.cl" && pass == "1234") {
-             _user.value = UserState(
-                name = "Usuario",
-                email = "user@user.cl",
-                profileImageUri = null,
-                isAdmin = false
-            )
-            return true
+        // La lógica ahora consulta la capa de datos (FakeCredentials)
+        when {
+            email == "admin@admin.cl" && pass == "1234" -> {
+                _user.value = UserState(
+                    name = "Administrador",
+                    email = "admin@admin.cl",
+                    profileImageUri = null,
+                    isAdmin = true
+                )
+                return true
+            }
+            email == FakeCredentials.registeredEmail && pass == FakeCredentials.registeredPassword && email.isNotEmpty() -> {
+                _user.value = UserState(
+                    name = "Usuario Registrado", // Puedes cambiar esto
+                    email = FakeCredentials.registeredEmail,
+                    profileImageUri = null,
+                    isAdmin = false
+                )
+                return true
+            }
+            email == "user@user.cl" && pass == "1234" -> {
+                _user.value = UserState(
+                    name = "Usuario",
+                    email = "user@user.cl",
+                    profileImageUri = null,
+                    isAdmin = false
+                )
+                return true
+            }
+            else -> {
+                _user.value = null
+                return false
+            }
         }
-        _user.value = null
-        return false
     }
 
     fun logout() {

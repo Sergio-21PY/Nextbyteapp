@@ -19,13 +19,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nextbyte_app.data.FakeCredentials // ¡CORREGIDO!
 import com.example.nextbyte_app.ui.screens.account.UserViewModel
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit = {},
-    userViewModel: UserViewModel // CORREGIDO: Se recibe el ViewModel como parámetro
+    userViewModel: UserViewModel
 ) {
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
@@ -96,13 +97,15 @@ fun LoginScreen(
             onClick = {
                 val email = emailState.value
                 val password = passwordState.value
+                // Ahora el ViewModel se encarga de la lógica, pero la puede obtener de FakeCredentials
                 if (userViewModel.login(email, password)) {
                     Toast.makeText(context, "¡Acceso Exitoso! Bienvenido.", Toast.LENGTH_SHORT).show()
                     onLoginSuccess()
                 } else {
+                    // Podemos usar la data de FakeCredentials para dar una pista
                     Toast.makeText(
                         context,
-                        "Credenciales incorrectas. Inténtalo de nuevo.",
+                        "Credenciales incorrectas. Intenta con: ${FakeCredentials.DEFAULT_EMAIL}",
                         Toast.LENGTH_LONG
                     ).show()
                 }

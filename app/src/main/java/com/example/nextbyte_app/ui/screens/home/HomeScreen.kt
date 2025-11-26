@@ -20,6 +20,7 @@ import com.example.nextbyte_app.ui.screens.AppDestinations
 import com.example.nextbyte_app.ui.screens.ECommerceBottomBar
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.account.AccountScreen
+import com.example.nextbyte_app.ui.screens.account.UserViewModel
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.screens.home.content.HomeCarousel
 import com.example.nextbyte_app.ui.shared.MainTopBar
@@ -28,7 +29,8 @@ import com.example.nextbyte_app.ui.shared.MainTopBar
 fun HomeScreen(
     navController: NavController,
     products: List<Product>,
-    onFavoriteClick: (Product) -> Unit
+    onFavoriteClick: (Product) -> Unit,
+    userViewModel: UserViewModel // 1. AÑADIDO el ViewModel como parámetro
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
@@ -87,7 +89,8 @@ fun HomeScreen(
             }
 
             composable(AppDestinations.Account.route) {
-                AccountScreen(navController = bottomNavController)
+                // 2. PASADO el ViewModel a la pantalla de cuenta
+                AccountScreen(navController = bottomNavController, userViewModel = userViewModel)
             }
         }
     }

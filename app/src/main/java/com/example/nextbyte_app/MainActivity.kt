@@ -28,6 +28,9 @@ import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.allProducts
 import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.ProductDetailScreen
+import com.example.nextbyte_app.ui.screens.account.AccountScreen
+import com.example.nextbyte_app.ui.screens.account.EditProfileScreen
+import com.example.nextbyte_app.ui.screens.account.UserViewModel
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
@@ -43,6 +46,9 @@ class MainActivity : ComponentActivity() {
             NextbyteappTheme {
                 val navController = rememberNavController()
                 var products by remember { mutableStateOf(allProducts) }
+                // 1. CREAR UNA ÚNICA INSTANCIA DEL VIEWMODEL AQUÍ
+                val userViewModel: UserViewModel = viewModel()
+
                 val onFavoriteClick: (Product) -> Unit = { product ->
                     val index = products.indexOfFirst { it.id == product.id }
                     if (index != -1) {
@@ -60,18 +66,23 @@ class MainActivity : ComponentActivity() {
                         composable("welcome") { WelcomeScreen(onNavigateToLogin = { navController.navigate("login") }) }
                         composable("register") { RegisterScreen(onBack = { navController.popBackStack() }) }
                         composable("login"){
+                            // 2. PASAR LA MISMA INSTANCIA A LOGINSCREEN
                             LoginScreen(
                                 onLoginSuccess = {
                                     navController.navigate("home") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 },
-                                onNavigateToRegister = { navController.navigate("register") }
+                                onNavigateToRegister = { navController.navigate("register") },
+                                userViewModel = userViewModel
                             )
                         }
-                        composable("home") { HomeScreen(navController, products, onFavoriteClick) }
+                        composable("home") { HomeScreen(navController, products, onFavoriteClick, userViewModel) } // CORREGIDO
                         composable("favorites") { FavoritosScreen(navController = navController, products = products, onFavoriteClick = onFavoriteClick) }
                         composable("settings") { SettingsScreen(navController = navController) }
+                        // 3. PASAR LA MISMA INSTANCIA A ACCOUNTSCREEN
+                        composable("account") { AccountScreen(navController = navController, userViewModel = userViewModel) }
+                        composable("edit_profile") { EditProfileScreen(navController = navController, userViewModel = userViewModel) }
                         composable("account_options") { AccountOptionsScreen(navController = navController) }
                         composable("change_email") { ChangeEmailScreen(navController = navController) }
                         composable("change_password") { ChangePasswordScreen(navController = navController) }
@@ -100,6 +111,7 @@ class MainActivity : ComponentActivity() {
                         composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                         composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
                         composable("logout") {
+                            userViewModel.logout()
                             navController.navigate("welcome") {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     inclusive = true

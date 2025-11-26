@@ -1,22 +1,11 @@
 package com.example.nextbyte_app.ui.screens.login
+
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,16 +19,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.nextbyte_app.ui.screens.BdFake
-
+import com.example.nextbyte_app.ui.screens.account.UserViewModel
 
 @Composable
 fun LoginScreen(
-    /*Se añaden los parametros para navegar entre las pantallas.*/
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit = {}
+    onNavigateToRegister: () -> Unit = {},
+    userViewModel: UserViewModel // CORREGIDO: Se recibe el ViewModel como parámetro
 ) {
-    // Estados para los TextField
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -49,17 +36,12 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF6A0DAD),
-                        Color(0xFF4B0082)
-                    )
+                    colors = listOf(Color(0xFF6A0DAD), Color(0xFF4B0082))
                 )
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center // Lo centras en la pantalla
+        verticalArrangement = Arrangement.Center
     ) {
-
-
         Text(
             text = "Iniciar Sesión",
             fontSize = 32.sp,
@@ -68,8 +50,6 @@ fun LoginScreen(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
-        //Utilizar el padding(horizontal) tiene una mejor adaptacion en app moviles.
 
         TextField(
             value = emailState.value,
@@ -85,11 +65,11 @@ fun LoginScreen(
             ),
             modifier = Modifier
                 .padding(horizontal = 32.dp)
-                .fillMaxWidth(), //
+                .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp)) // Espaciado entre los campos
+        Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
             value = passwordState.value,
@@ -103,37 +83,29 @@ fun LoginScreen(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
-            /*Caracter visual de contraseña: 13/10/2025*/
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier
-                .padding(horizontal = 32.dp) //Margen de 32dp a los lados
+                .padding(horizontal = 32.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Boton de iniciar sesion.
         Button(
-            //Usamos el parámetro onLoginSuccess
             onClick = {
-                val inputEmail = emailState.value
-                val inputPassword = passwordState.value
-
-                if (inputEmail == BdFake.registeredEmail && inputPassword == BdFake.registeredPassword){
+                val email = emailState.value
+                val password = passwordState.value
+                if (userViewModel.login(email, password)) {
                     Toast.makeText(context, "¡Acceso Exitoso! Bienvenido.", Toast.LENGTH_SHORT).show()
                     onLoginSuccess()
-
-                }else{
+                } else {
                     Toast.makeText(
                         context,
-                        "Credenciales incorrectas. Intenta con: ${BdFake.registeredEmail}",
+                        "Credenciales incorrectas. Inténtalo de nuevo.",
                         Toast.LENGTH_LONG
                     ).show()
-
                 }
-
-
             },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -146,10 +118,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .background(
                         brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFFFFD700),
-                                Color(0xFFFFA500)
-                            )
+                            colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
                         ),
                         shape = RoundedCornerShape(25.dp)
                     )
@@ -165,19 +134,13 @@ fun LoginScreen(
             }
         }
 
-        // Espaciador entre el botón y el texto clicable
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Texto con click, fuera del boton
         Text(
             text = "¿No tienes una cuenta? Regístrate aquí",
             modifier = Modifier
-                .clickable {
-                    //Usamos onNavigateToRegister
-                    onNavigateToRegister()
-                }
+                .clickable { onNavigateToRegister() }
                 .padding(8.dp),
-
             color = Color.White,
             textDecoration = TextDecoration.Underline
         )

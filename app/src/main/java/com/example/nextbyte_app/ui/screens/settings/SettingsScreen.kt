@@ -50,7 +50,7 @@ fun SettingsScreen(navController: NavController) {
         SettingItem("Pedidos anteriores", Icons.Default.History, "past_orders"),
         SettingItem("Tiendas físicas", Icons.Default.Store, "physical_stores"),
         SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),
-        SettingItem("Ayuda", Icons.AutoMirrored.Filled.HelpOutline, "help"),
+        SettingItem("Ayuda", Icons.AutoMirrored.Filled.HelpOutline, "faq"),
         SettingItem("Términos y condiciones", Icons.AutoMirrored.Filled.Notes, "terms_and_conditions"),
         SettingItem("Acerca de Next Byte", Icons.Default.Info, "about_nextbyte"),
         SettingItem("Salir de la cuenta", Icons.AutoMirrored.Filled.Logout, "logout")

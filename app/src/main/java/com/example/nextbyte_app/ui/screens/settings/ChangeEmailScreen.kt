@@ -1,5 +1,6 @@
 package com.example.nextbyte_app.ui.screens.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -27,6 +29,7 @@ import androidx.navigation.NavController
 fun ChangeEmailScreen(navController: NavController) {
     var newEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -52,7 +55,8 @@ fun ChangeEmailScreen(navController: NavController) {
                 value = newEmail,
                 onValueChange = { newEmail = it },
                 label = { Text("Nuevo correo electrónico") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -60,11 +64,20 @@ fun ChangeEmailScreen(navController: NavController) {
                 onValueChange = { password = it },
                 label = { Text("Contraseña actual") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* TODO: Implement email change logic */ },
+                onClick = {
+                    if (newEmail.isNotBlank() && password.isNotBlank()) {
+                        // Lógica de guardado simulada
+                        Toast.makeText(context, "Correo electrónico actualizado con éxito", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    } else {
+                        Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar cambios")

@@ -21,6 +21,7 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.example.nextbyte_app.data.Product
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarritoScreen(navController: NavController) {
     // Lista temporal de productos en el carrito - después conectarás con ViewModel
@@ -122,7 +123,7 @@ fun CarritoScreen(navController: NavController) {
         }
     }
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartItemCard(
     cartItem: CartItem,

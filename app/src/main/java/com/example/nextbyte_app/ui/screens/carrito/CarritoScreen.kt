@@ -119,9 +119,6 @@ fun CarritoScreen(navController: NavController) {
                         }
                     )
                 }
-                item {
-                    DiscountSection(cartViewModel = cartViewModel)
-                }
             }
         }
     }

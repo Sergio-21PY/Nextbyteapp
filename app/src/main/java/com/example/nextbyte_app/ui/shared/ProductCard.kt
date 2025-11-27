@@ -1,28 +1,28 @@
 package com.example.nextbyte_app.ui.shared
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.ShoppingCart
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import com.example.nextbyte_app.data.Product
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCard(
     product: Product,
@@ -31,76 +31,98 @@ fun ProductCard(
     onFavoriteClick: () -> Unit
 ) {
     Card(
+        onClick = onProductClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp),
-        shape = RoundedCornerShape(12.dp),
-        onClick = onProductClick
+            .height(140.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            // IMAGEN DESDE FIREBASE
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
+                    .data(product.imageResId)
                     .crossfade(true)
                     .build(),
-                contentDescription = product.name,
+                contentDescription = "Imagen de ${product.name}",
                 modifier = Modifier
-                    .width(120.dp)
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Crop
+                    .size(120.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = product.imageResId),
+                error = painterResource(id = product.imageResId)
             )
 
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .weight(1f)
+                    .padding(start = 16.dp)
+                    .weight(1f),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = product.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = product.description,
-                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    text = "$${product.price}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    text = getShortDescription(product.description),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
 
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                IconButton(onClick = onFavoriteClick) {
-                    Icon(
-                        imageVector = if (product.isFavorited) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                        contentDescription = "Favorito",
-                        tint = if (product.isFavorited) Color.Red else Color.Gray
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formatPrice(product.price),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                }
 
-                IconButton(onClick = onAddToCartClick) {
-                    Icon(
-                        imageVector = Icons.Outlined.ShoppingCart,
-                        contentDescription = "Agregar al carrito"
-                    )
+                    Row {
+                        IconButton(onClick = onFavoriteClick) {
+                            Icon(
+                                imageVector = if (product.isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = "Marcar como favorito",
+                                tint = if (product.isFavorited) Color.Red else MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onAddToCartClick) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Agregar al carrito",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+private fun formatPrice(price: Int): String {
+    return "$${price.toString().replace(Regex("(\\d)(?=(\\d{3})+(?!\\d))"), "$1.")}"
+}
+
+private fun getShortDescription(description: String): String {
+    return if (description.length > 50) {
+        description.substring(0, 50) + "..."
+    } else {
+        description
     }
 }

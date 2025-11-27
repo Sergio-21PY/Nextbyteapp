@@ -1,145 +1,98 @@
-package com.example.nextbyte_app.ui.screens
+package com.example.nextbyte_app.ui.screens // O el nombre de tu paquete
 
-import androidx.compose.foundation.layout.*
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import com.example.nextbyte_app.data.Product
-import com.example.nextbyte_app.viewmodels.ProductViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nextbyte_app.data.allProducts
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailScreen(
-    productId: String,
-    navController: NavController,
-    productViewModel: ProductViewModel = viewModel()
-) {
-    val products by productViewModel.products.collectAsState()
-    val product = products.find { it.id == productId }
+fun ProductDetailScreen(productId: Int) {
+    // 1. Buscamos el producto en nuestra lista usando el ID que recibimos
+    val product = allProducts.find { it.id == productId }
+    val formatSymbols = DecimalFormatSymbols(Locale("es", "CL"))
+    formatSymbols.currencySymbol = "$"
+    val priceFormatter = DecimalFormat("#,##0", formatSymbols)
 
-    if (product == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Producto no encontrado")
-        }
-        return
-    }
-
-    val scrollState = rememberScrollState()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Detalles del Producto") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { /* Agregar al carrito */ },
-                icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito") },
-                text = { Text("Agregar al Carrito") }
-            )
-        }
-    ) { paddingValues ->
+    // Usamos una Columna para mostrar los detalles
+    if (product != null) {
         Column(
             modifier = Modifier
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
+                .fillMaxSize()
+                .statusBarsPadding() // agrega relleno a la parte superior para no tapar los iconos del telefono.
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp) //
         ) {
-            // Imagen del producto
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
-                    .crossfade(true)
-                    .build(),
+            Spacer(modifier = Modifier.height(16.dp)) // Espacio inicial arriba
+
+            // IMAGEN DEL PRODUCTO
+            Image(
+                painter = painterResource(id = product.imageResId),
                 contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
-                contentScale = ContentScale.Crop
+                    .height(250.dp)
             )
 
-            // Información del producto
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = product.name,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+            // NOMBRE DEL PRODUCTO
+            Text(
+                text = product.name,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-                Text(
-                    text = "$${product.price}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // PRECIO
+            Text(
 
-                Text(
-                    text = product.description,
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp
-                )
+                text = "$" + priceFormatter.format(product.price),
+                fontSize = 22.sp,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                // Información adicional
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    InfoChip("Categoría", product.category)
-                    InfoChip("Stock", "${product.stock} disponibles")
-                    InfoChip("Rating", "⭐ ${product.rating}")
-                }
-            }
+            // DESCRIPCIÓN
+            Text(
+                text = product.description,
+                fontSize = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp)) // Espacio final abajo
         }
-    }
-}
-
-
-@Composable
-fun InfoChip(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = Color.Gray
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
+    } else {
+        // Pantalla por si el producto no se encuentra
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(), //
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Producto no encontrado!!.")
+        }
     }
 }

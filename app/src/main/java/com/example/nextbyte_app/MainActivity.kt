@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
+import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen // <- AGREGAR ESTA IMPORTACIÓN
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
@@ -102,6 +103,13 @@ class MainActivity : ComponentActivity() {
                                     onFavoriteClick = { product ->
                                         // Lógica de favoritos
                                     }
+                                )
+                            }
+
+                            // AGREGAR ESTA NUEVA RUTA
+                            composable("add_product") {
+                                AddProductScreen(
+                                    navController = navController
                                 )
                             }
 

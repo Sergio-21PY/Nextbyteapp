@@ -25,7 +25,6 @@ import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.viewmodels.ProductViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     productId: String,
@@ -126,7 +125,6 @@ fun ProductDetailScreen(
         }
     }
 }
-
 
 @Composable
 fun InfoChip(label: String, value: String) {

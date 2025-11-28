@@ -105,10 +105,10 @@ class FirebaseRepository {
         }
     }
 
-    // Actualizar producto existente
+    // Actualizar producto existente - CORREGIDO
     suspend fun updateProduct(productId: String, product: Product): Boolean {
         return try {
-            val productData = hashMapOf(
+            val productData = hashMapOf<String, Any>(
                 "name" to product.name,
                 "description" to product.description,
                 "price" to product.price,
@@ -121,7 +121,7 @@ class FirebaseRepository {
 
             db.collection("products")
                 .document(productId)
-                .update(productData as Map<String, Any>)
+                .update(productData) // Sin cast necesario
                 .await()
 
             Log.d("FirebaseRepository", "Producto actualizado exitosamente: $productId")
@@ -198,7 +198,7 @@ class FirebaseRepository {
 
             products.forEach { product ->
                 val docRef = db.collection("products").document()
-                val productData = hashMapOf(
+                val productData = hashMapOf<String, Any>(
                     "name" to product.name,
                     "description" to product.description,
                     "price" to product.price,
@@ -308,14 +308,13 @@ class FirebaseRepository {
     // Crear o actualizar usuario
     suspend fun createOrUpdateUser(user: User): Boolean {
         return try {
-            val userData = hashMapOf(
+            val userData = hashMapOf<String, Any>(
                 "uid" to user.uid,
                 "email" to user.email,
                 "name" to user.name,
                 "phone" to user.phone,
                 "address" to user.address,
                 "role" to user.role.name,
-                "createdAt" to user.createdAt ?: Timestamp.now(),
                 "profileImage" to user.profileImage,
                 "isEmailVerified" to user.isEmailVerified
             )
@@ -380,7 +379,7 @@ class FirebaseRepository {
     // Actualizar información básica del usuario
     suspend fun updateUserBasicInfo(userId: String, name: String, phone: String, address: String): Boolean {
         return try {
-            val userData = mapOf(
+            val userData = mapOf<String, Any>(
                 "name" to name,
                 "phone" to phone,
                 "address" to address,

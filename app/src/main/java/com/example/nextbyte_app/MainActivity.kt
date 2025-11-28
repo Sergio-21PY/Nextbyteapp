@@ -26,7 +26,6 @@ import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
 import com.example.nextbyte_app.ui.screens.settings.*
-import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
 import com.example.nextbyte_app.viewmodels.AuthViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
@@ -66,13 +65,14 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = if (isUserLoggedIn) "home" else "welcome"
                         ) {
-                            // Pantallas de autenticación
+
+
                             composable("welcome") {
-                                WelcomeScreen(
-                                    onNavigateToLogin = { navController.navigate("login") },
-                                    onNavigateToRegister = { navController.navigate("register") }
-                                )
-                            }
+                                    WelcomeScreen(
+                                        onNavigateToLogin = { navController.navigate("login") },
+                                        onNavigateToRegister = { navController.navigate("register") }
+                                    )
+                                }
 
                             composable("register") {
                                 RegisterScreen(
@@ -123,13 +123,6 @@ class MainActivity : ComponentActivity() {
 
                             composable("carrito") {
                                 CarritoScreen(
-                                    navController = navController
-                                )
-                            }
-
-                            // Pantallas de administración
-                            composable("admin_panel") {
-                                AdminPanelScreen(
                                     navController = navController
                                 )
                             }

@@ -21,16 +21,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.example.nextbyte_app.data.Product
+import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.ui.screens.AppDestinations
 import com.example.nextbyte_app.ui.screens.ECommerceBottomBar
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
@@ -43,17 +44,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
-    onFavoriteClick: (Product) -> Unit,
-    userViewModel: UserViewModel = viewModel()
+    navController: NavController
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val userViewModel: UserViewModel = viewModel()
 
     // Observar el usuario actual
-    val currentUser by userViewModel.currentUser.collectAsState()
+    val currentUserState = userViewModel.currentUser.collectAsState()
+    val currentUser = currentUserState.value
     val userName = currentUser?.name ?: "Usuario"
+    val userRole = currentUser?.role?.let { getRoleDisplayName(it) } ?: "Cliente"
 
     val title = when (currentRoute) {
         AppDestinations.Home.route -> "Inicio"
@@ -67,8 +69,8 @@ fun HomeScreen(
         topBar = {
             MainTopBar(
                 title = title,
-                onSettingsClick = { navController.navigate("settings") },
-                userViewModel = userViewModel
+                onSettingsClick = { navController.navigate("settings") }
+                // Eliminar userViewModel = userViewModel
             )
         },
         bottomBar = {
@@ -83,17 +85,14 @@ fun HomeScreen(
             composable(AppDestinations.Home.route) {
                 HomeContent(
                     navController = navController,
-                    onFavoriteClick = onFavoriteClick,
                     userName = userName,
-                    userRole = currentUser?.getRoleDisplayName() ?: "Cliente"
+                    userRole = userRole
                 )
             }
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
-                    navController = navController,
-                    onFavoriteClick = onFavoriteClick,
-                    userViewModel = userViewModel
+                    navController = navController
                 )
             }
 
@@ -103,8 +102,7 @@ fun HomeScreen(
 
             composable(AppDestinations.Account.route) {
                 AccountScreen(
-                    navController = bottomNavController,
-                    userViewModel = userViewModel
+                    navController = bottomNavController
                 )
             }
         }
@@ -114,7 +112,6 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     navController: NavController,
-    onFavoriteClick: (Product) -> Unit,
     userName: String,
     userRole: String,
     productViewModel: ProductViewModel = viewModel()
@@ -160,8 +157,7 @@ fun HomeContent(
                             onProductClick = {
                                 // Navegar al detalle del producto
                                 // navController.navigate("product_detail/${product.id}")
-                            },
-                            onFavoriteClick = { onFavoriteClick(product) }
+                            }
                         )
                     }
                 }
@@ -211,7 +207,7 @@ fun HomeContent(
 
         // ACCESO RÁPIDO PARA ADMIN/MANAGER
         item {
-            AdminQuickAccess(navController = navController, userViewModel = userViewModel)
+            AdminQuickAccess(navController = navController)
         }
 
         // ESPACIO FINAL
@@ -380,8 +376,7 @@ fun SectionHeader(
 @Composable
 fun FeaturedProductCard(
     product: Product,
-    onProductClick: () -> Unit,
-    onFavoriteClick: () -> Unit
+    onProductClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -535,13 +530,14 @@ fun CategoryChip(category: String, emoji: String, onClick: () -> Unit) {
 
 @Composable
 fun AdminQuickAccess(
-    navController: NavController,
-    userViewModel: UserViewModel = viewModel()
+    navController: NavController
 ) {
-    val currentUser by userViewModel.currentUser.collectAsState()
+    val userViewModel: UserViewModel = viewModel()
+    val currentUserState = userViewModel.currentUser.collectAsState()
+    val currentUser = currentUserState.value
 
-    // Solo mostrar si el usuario es admin o manager
-    if (currentUser?.canAddProducts() == true) {
+    // Solo mostrar si el usuario es admin o manager - CORREGIDO
+    if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -574,7 +570,7 @@ fun AdminQuickAccess(
                     }
 
                     // Botón para panel admin (solo para admins)
-                    if (currentUser?.role?.name == "ADMIN") {
+                    if (currentUser?.role == UserRole.ADMIN) {
                         Button(
                             onClick = { navController.navigate("admin_panel") },
                             modifier = Modifier.weight(1f),
@@ -615,5 +611,15 @@ fun EmptyProductsMessage() {
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }
+    }
+}
+
+// Función helper para obtener el nombre del rol
+private fun getRoleDisplayName(role: UserRole): String {
+    return when (role) {
+        UserRole.ADMIN -> "Administrador"
+        UserRole.MANAGER -> "Manager"
+        UserRole.CUSTOMER -> "Cliente"
+        UserRole.GUEST -> "Invitado"
     }
 }

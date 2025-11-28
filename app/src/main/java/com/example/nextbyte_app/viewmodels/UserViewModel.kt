@@ -8,6 +8,7 @@ import com.example.nextbyte_app.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class UserViewModel : ViewModel() {
     private val repository = FirebaseRepository()
@@ -89,26 +90,27 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    // Verificar permisos
-    fun canAddProducts(): Boolean {
-        return currentUser.value?.canAddProducts() ?: false
-    }
+    // Verificar permisos - VERSIÓN SIMPLIFICADA
+    val canAddProducts: Boolean
+        get() = currentUser.value?.let { user ->
+            user.role == UserRole.ADMIN || user.role == UserRole.MANAGER
+        } ?: false
 
-    fun canEditProducts(): Boolean {
-        return currentUser.value?.canEditProducts() ?: false
-    }
+    val canEditProducts: Boolean
+        get() = currentUser.value?.let { user ->
+            user.role == UserRole.ADMIN || user.role == UserRole.MANAGER
+        } ?: false
 
-    fun canDeleteProducts(): Boolean {
-        return currentUser.value?.canDeleteProducts() ?: false
-    }
+    val canDeleteProducts: Boolean
+        get() = currentUser.value?.let { user ->
+            user.role == UserRole.ADMIN
+        } ?: false
 
-    fun isAdmin(): Boolean {
-        return currentUser.value?.role == UserRole.ADMIN
-    }
+    val isAdmin: Boolean
+        get() = currentUser.value?.role == UserRole.ADMIN
 
-    fun isManager(): Boolean {
-        return currentUser.value?.role == UserRole.MANAGER
-    }
+    val isManager: Boolean
+        get() = currentUser.value?.role == UserRole.MANAGER
 
     // Cerrar sesión
     fun clearUser() {

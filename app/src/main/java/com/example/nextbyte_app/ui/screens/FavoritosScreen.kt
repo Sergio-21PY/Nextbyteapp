@@ -18,10 +18,9 @@ import androidx.compose.runtime.getValue
 
 @Composable
 fun FavoritosScreen(
-    navController: NavController,
-    onFavoriteClick: (Product) -> Unit,
-    productViewModel: ProductViewModel = viewModel()
+    navController: NavController
 ) {
+    val productViewModel: ProductViewModel = viewModel()
     val products by productViewModel.products.collectAsState()
     val favoriteProducts = products.filter { it.isFavorited }
 
@@ -32,10 +31,25 @@ fun FavoritosScreen(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "No tienes productos favoritos",
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "❤️",
+                    style = MaterialTheme.typography.headlineLarge
+                )
+                Text(
+                    text = "No tienes productos favoritos",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Agrega productos a favoritos para verlos aquí",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
         }
     } else {
         LazyColumn(
@@ -43,18 +57,43 @@ fun FavoritosScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
+            item {
+                Column(
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Text(
+                        text = "❤️ Mis Favoritos",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${favoriteProducts.size} productos favoritos",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             items(favoriteProducts) { product ->
                 ProductCard(
                     product = product,
                     onProductClick = {
                         // Navegar al detalle del producto
+                        // navController.navigate("product_detail/${product.id}")
                     },
                     onAddToCartClick = {
-                        // Agregar al carrito
+                        // Agregar al carrito - puedes implementar esto después
                     },
-                    onFavoriteClick = { onFavoriteClick(product) }
+                    onFavoriteClick = {
+                        // Lógica para quitar de favoritos
+                        // Por ahora, puedes implementar un toggle simple
+                    }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }

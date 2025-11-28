@@ -24,12 +24,11 @@ import com.example.nextbyte_app.viewmodels.ProductViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductosScreen(
-    navController: NavController,
-    onFavoriteClick: (Product) -> Unit,
-    cartViewModel: CartViewModel = viewModel(),
-    productViewModel: ProductViewModel = viewModel()
+    navController: NavController
 ) {
     val context = LocalContext.current
+    val cartViewModel: CartViewModel = viewModel()
+    val productViewModel: ProductViewModel = viewModel()
     val products by productViewModel.products.collectAsState()
     val isLoading by productViewModel.isLoading.collectAsState()
 
@@ -143,7 +142,15 @@ fun ProductosScreen(
                                     Toast.LENGTH_SHORT
                                 ).show()
                             },
-                            onFavoriteClick = { onFavoriteClick(product) }
+                            onFavoriteClick = {
+                                // Lógica de favoritos - puedes implementarla después
+                                // Por ahora solo muestra un mensaje
+                                Toast.makeText(
+                                    context,
+                                    "❤️ ${product.name} agregado a favoritos",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }

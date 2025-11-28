@@ -199,7 +199,7 @@ fun AddProductScreen(
                         val product = Product(
                             name = name,
                             description = description,
-                            price = price.toDouble(),
+                            price = price.toInt(),
                             category = category,
                             imageUrl = if (imageUrl.isEmpty()) "https://via.placeholder.com/150" else imageUrl,
                             rating = rating.toDoubleOrNull() ?: 0.0,

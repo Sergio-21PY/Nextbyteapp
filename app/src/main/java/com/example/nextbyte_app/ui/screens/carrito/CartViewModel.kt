@@ -19,7 +19,7 @@ class CartViewModel : ViewModel() {
         _cartItems.clear()
     }
 
-    fun getTotalPrice(): Double {
+    fun getTotalPrice(): Int {
         return _cartItems.sumOf { it.price }
     }
 }

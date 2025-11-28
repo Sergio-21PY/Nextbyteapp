@@ -49,23 +49,28 @@ import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextbyte_app.R
 import com.example.nextbyte_app.data.User
+import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.viewmodels.AuthViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @Composable
 fun AccountScreen(
-    navController: NavController,
-    userViewModel: UserViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    navController: NavController
 ) {
-    // Observar el usuario actual desde el ViewModel
-    val currentUser by userViewModel.currentUser.collectAsState()
-    val isLoading by userViewModel.isLoading.collectAsState()
+    val userViewModel: UserViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
+
+    // CORREGIDO: Usar .value en lugar de delegación con 'by'
+    val currentUserState = userViewModel.currentUser.collectAsState()
+    val isLoadingState = userViewModel.isLoading.collectAsState()
+
+    val currentUser = currentUserState.value
+    val isLoading = isLoadingState.value
 
     // Cargar usuario si no está cargado
     LaunchedEffect(Unit) {
-        val userId = authViewModel.getCurrentUser()?.uid
-        if (userId != null && currentUser == null) {
+        val userId = authViewModel.getCurrentUserId()
+        if (userId.isNotEmpty() && currentUser == null) {
             userViewModel.loadCurrentUser(userId)
         }
     }
@@ -86,12 +91,11 @@ fun AccountScreen(
             }
         } else if (currentUser != null) {
             // Usuario logueado - mostrar información real
-            ProfileHeader(user = currentUser!!)
+            ProfileHeader(user = currentUser)
             Spacer(modifier = Modifier.height(32.dp))
             SettingsSection(
-                user = currentUser!!,
-                navController = navController,
-                userViewModel = userViewModel
+                user = currentUser,
+                navController = navController
             )
             Spacer(modifier = Modifier.weight(1f))
             LogoutButton(
@@ -99,7 +103,7 @@ fun AccountScreen(
                     authViewModel.signOut()
                     userViewModel.clearUser()
                     navController.navigate("welcome") {
-                        popUpTo("home") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
@@ -119,8 +123,10 @@ fun AccountScreen(
                     )
                     Button(
                         onClick = {
-                            val userId = authViewModel.getCurrentUser()?.uid
-                            userId?.let { userViewModel.loadCurrentUser(it) }
+                            val userId = authViewModel.getCurrentUserId()
+                            if (userId.isNotEmpty()) {
+                                userViewModel.loadCurrentUser(userId)
+                            }
                         }
                     ) {
                         Text("Reintentar")
@@ -136,9 +142,9 @@ fun ProfileHeader(user: User) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // Determinar imagen de perfil basada en el rol
         val profileImageRes = when {
-            user.role.name == "ADMIN" -> R.drawable.img // Imagen para admin
-            user.role.name == "MANAGER" -> R.drawable.img // Imagen para manager
-            else -> R.drawable.perfil_image // Imagen para cliente
+            user.role == UserRole.ADMIN -> R.drawable.img
+            user.role == UserRole.MANAGER -> R.drawable.img
+            else -> R.drawable.perfil_image
         }
 
         Image(
@@ -148,7 +154,7 @@ fun ProfileHeader(user: User) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(
-                    if (user.role.name == "ADMIN" || user.role.name == "MANAGER")
+                    if (user.role == UserRole.ADMIN || user.role == UserRole.MANAGER)
                         RoundedCornerShape(16.dp)
                     else
                         CircleShape
@@ -168,21 +174,22 @@ fun ProfileHeader(user: User) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(8.dp))
-        // Mostrar rol del usuario
+        // Mostrar rol del usuario - CORREGIDO: Usar función helper
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    when (user.role.name) {
-                        "ADMIN" -> Color(0xFFFF5252) // Rojo para admin
-                        "MANAGER" -> Color(0xFFFF9800) // Naranja para manager
-                        else -> MaterialTheme.colorScheme.primary // Azul para cliente
+                    when (user.role) {
+                        UserRole.ADMIN -> Color(0xFFFF5252)
+                        UserRole.MANAGER -> Color(0xFFFF9800)
+                        UserRole.CUSTOMER -> MaterialTheme.colorScheme.primary
+                        UserRole.GUEST -> MaterialTheme.colorScheme.secondary
                     }
                 )
                 .padding(horizontal = 12.dp, vertical = 4.dp)
         ) {
             Text(
-                text = user.getRoleDisplayName(),
+                text = getRoleDisplayName(user.role), // Función helper
                 color = Color.White,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
@@ -194,8 +201,7 @@ fun ProfileHeader(user: User) {
 @Composable
 fun SettingsSection(
     user: User,
-    navController: NavController,
-    userViewModel: UserViewModel
+    navController: NavController
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -238,8 +244,8 @@ fun SettingsSection(
                 navController.navigate("help")
             }
 
-            // Mostrar opciones de administrador si corresponde
-            if (user.canViewAdminPanel()) {
+            // Mostrar opciones de administrador si corresponde - CORREGIDO
+            if (canViewAdminPanel(user)) {
                 AdminSettings(navController = navController)
             }
         }
@@ -327,4 +333,18 @@ fun LogoutButton(onClick: () -> Unit) {
         Spacer(modifier = Modifier.width(8.dp))
         Text("Cerrar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
+}
+
+// Funciones helper para AccountScreen
+private fun getRoleDisplayName(role: UserRole): String {
+    return when (role) {
+        UserRole.ADMIN -> "Administrador"
+        UserRole.MANAGER -> "Gestor"
+        UserRole.CUSTOMER -> "Cliente"
+        UserRole.GUEST -> "Invitado"
+    }
+}
+
+private fun canViewAdminPanel(user: User): Boolean {
+    return user.role == UserRole.ADMIN || user.role == UserRole.MANAGER
 }

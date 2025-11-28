@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.sp
 import com.example.nextbyte_app.R
 
 @Composable
-fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
+fun WelcomeScreen(
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,7 +36,6 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
-
     ) {
         // LOGO
         Image(
@@ -47,7 +49,6 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
 
         // Título
         Text(
-
             text = "NextByte",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
@@ -66,14 +67,14 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Botón principal con gradiente
+        // Botón principal - Comencemos (va a Login)
         Button(
             onClick = { onNavigateToLogin() },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .height(50.dp),
             shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues()
         ) {
             Box(
@@ -82,7 +83,8 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
                         brush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color(0xFFFFD700),
-                                Color(0xFFFFA500))
+                                Color(0xFFFFA500)
+                            )
                         ),
                         shape = RoundedCornerShape(25.dp)
                     )
@@ -95,13 +97,38 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
-
-
-
-
             }
+        }
 
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Botón secundario - Registrarse
+        Button(
+            onClick = { onNavigateToRegister() },
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(50.dp),
+            shape = RoundedCornerShape(25.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            border = ButtonDefaults.outlinedButtonBorder,
+            contentPadding = PaddingValues()
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(25.dp)
+                    )
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Crear cuenta",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

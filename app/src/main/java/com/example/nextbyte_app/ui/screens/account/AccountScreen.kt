@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,9 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,73 +46,113 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextbyte_app.R
-
-// Modelo de datos del usuario
-data class User(
-    val name: String,
-    val email: String,
-    val isAdmin: Boolean
-)
+import com.example.nextbyte_app.data.User
+import com.example.nextbyte_app.viewmodels.AuthViewModel
+import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @Composable
-fun AccountScreen(navController: NavController) {
-    // --- SIMULACIÓN DE INICIO DE SESIÓN ---
-    // admin:
-    val loginEmail by remember { mutableStateOf("admin@admin.cl") }
-    val loginPassword by remember { mutableStateOf("1234") }
-    // --- LÓGICA PARA DETERMINAR EL TIPO DE USUARIO ---
-    val currentUser: User? = when {
-        loginEmail == "admin@admin.cl" && loginPassword == "1234" -> {
-            User(name = "Administrador", email = "admin@admin.cl", isAdmin = true)
-        }
-        loginEmail == "user@user.cl" && loginPassword == "1234" -> {
-            User(name = "Usuario", email = "user@user.cl", isAdmin = false)
-        }
-        else -> {
-            null // Si los datos no coinciden, no hay usuario
+fun AccountScreen(
+    navController: NavController,
+    userViewModel: UserViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
+) {
+    // Observar el usuario actual desde el ViewModel
+    val currentUser by userViewModel.currentUser.collectAsState()
+    val isLoading by userViewModel.isLoading.collectAsState()
+
+    // Cargar usuario si no está cargado
+    LaunchedEffect(Unit) {
+        val userId = authViewModel.getCurrentUser()?.uid
+        if (userId != null && currentUser == null) {
+            userViewModel.loadCurrentUser(userId)
         }
     }
 
-    // Solo mostramos el contenido si el inicio de sesión fue "exitoso"
-    if (currentUser != null) {
-
-        val profileImageRes = if (currentUser.isAdmin) {
-            R.drawable.img // Cambia "img" si tu archivo se llama diferente (ej: logo_admin)
-        } else {
-            R.drawable.perfil_image // Cambia "perfil_image" si tu archivo se llama diferente (ej: perfil_usuario)
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ProfileHeader(user = currentUser, profileImageRes = profileImageRes)
-            Spacer(modifier = Modifier.height(32.dp))
-            SettingsSection(user = currentUser, navController = navController)
-            Spacer(modifier = Modifier.weight(1f))
-            LogoutButton {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Cargando información...")
             }
-        }
-    } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Error: Credenciales incorrectas.")
+        } else if (currentUser != null) {
+            // Usuario logueado - mostrar información real
+            ProfileHeader(user = currentUser!!)
+            Spacer(modifier = Modifier.height(32.dp))
+            SettingsSection(
+                user = currentUser!!,
+                navController = navController,
+                userViewModel = userViewModel
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            LogoutButton(
+                onClick = {
+                    authViewModel.signOut()
+                    userViewModel.clearUser()
+                    navController.navigate("welcome") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
+        } else {
+            // No hay usuario logueado o error
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        "No se pudo cargar la información del usuario",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Button(
+                        onClick = {
+                            val userId = authViewModel.getCurrentUser()?.uid
+                            userId?.let { userViewModel.loadCurrentUser(it) }
+                        }
+                    ) {
+                        Text("Reintentar")
+                    }
+                }
+            }
         }
     }
 }
+
 @Composable
-fun ProfileHeader(user: User, profileImageRes: Int) {
+fun ProfileHeader(user: User) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // Determinar imagen de perfil basada en el rol
+        val profileImageRes = when {
+            user.role.name == "ADMIN" -> R.drawable.img // Imagen para admin
+            user.role.name == "MANAGER" -> R.drawable.img // Imagen para manager
+            else -> R.drawable.perfil_image // Imagen para cliente
+        }
+
         Image(
             painter = painterResource(id = profileImageRes),
             contentDescription = "Foto de perfil",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(120.dp)
-                .clip(if (user.isAdmin) RoundedCornerShape(16.dp) else CircleShape)
+                .clip(
+                    if (user.role.name == "ADMIN" || user.role.name == "MANAGER")
+                        RoundedCornerShape(16.dp)
+                    else
+                        CircleShape
+                )
                 .background(MaterialTheme.colorScheme.surface)
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -127,41 +167,113 @@ fun ProfileHeader(user: User, profileImageRes: Int) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        // Mostrar rol del usuario
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    when (user.role.name) {
+                        "ADMIN" -> Color(0xFFFF5252) // Rojo para admin
+                        "MANAGER" -> Color(0xFFFF9800) // Naranja para manager
+                        else -> MaterialTheme.colorScheme.primary // Azul para cliente
+                    }
+                )
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = user.getRoleDisplayName(),
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
 @Composable
-fun SettingsSection(user: User, navController: NavController) {
+fun SettingsSection(
+    user: User,
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            SettingsItem(icon = Icons.Default.Edit, title = "Editar Perfil") { /* Navigar */ }
-            SettingsItem(icon = Icons.Default.CreditCard, title = "Métodos de Pago") { /* Navigar */ }
-            SettingsItem(icon = Icons.Default.Security, title = "Seguridad") { /* Navigar */ }
-            SettingsItem(icon = Icons.Default.HelpOutline, title = "Ayuda y Soporte") { /* Navigar */ }
+            SettingsItem(
+                icon = Icons.Default.Edit,
+                title = "Editar Perfil"
+            ) {
+                navController.navigate("account_options")
+            }
 
-            if (user.isAdmin) {
-                AdminSettings()
+            SettingsItem(
+                icon = Icons.Default.Settings,
+                title = "Configuración"
+            ) {
+                navController.navigate("settings")
+            }
+
+            SettingsItem(
+                icon = Icons.Default.CreditCard,
+                title = "Métodos de Pago"
+            ) {
+                navController.navigate("my_cards")
+            }
+
+            SettingsItem(
+                icon = Icons.Default.Security,
+                title = "Seguridad"
+            ) {
+                navController.navigate("change_password")
+            }
+
+            SettingsItem(
+                icon = Icons.Default.HelpOutline,
+                title = "Ayuda y Soporte"
+            ) {
+                navController.navigate("help")
+            }
+
+            // Mostrar opciones de administrador si corresponde
+            if (user.canViewAdminPanel()) {
+                AdminSettings(navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun AdminSettings() {
+fun AdminSettings(navController: NavController) {
     Column {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Panel de Administrador",
+            text = "Panel de Administración",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             color = MaterialTheme.colorScheme.primary
         )
-        SettingsItem(icon = Icons.Default.AdminPanelSettings, title = "Gestionar Usuarios") { /* Navigar */ }
-        SettingsItem(icon = Icons.Default.Person, title = "Ver Estadísticas") { /* Navigar */ }
+        SettingsItem(
+            icon = Icons.Default.AdminPanelSettings,
+            title = "Gestionar Usuarios"
+        ) {
+            navController.navigate("admin_panel")
+        }
+        SettingsItem(
+            icon = Icons.Default.Person,
+            title = "Estadísticas"
+        ) {
+            // navController.navigate("statistics") // Puedes crear esta pantalla después
+        }
+        SettingsItem(
+            icon = Icons.Default.Edit,
+            title = "Gestionar Productos"
+        ) {
+            navController.navigate("productos")
+        }
     }
 }
 
@@ -185,7 +297,7 @@ fun SettingsItem(icon: ImageVector, title: String, onClick: () -> Unit) {
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f) // Este usa el weight correcto
+            modifier = Modifier.weight(1f)
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -216,4 +328,3 @@ fun LogoutButton(onClick: () -> Unit) {
         Text("Cerrar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }
-

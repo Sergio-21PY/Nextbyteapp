@@ -38,16 +38,22 @@ import com.example.nextbyte_app.ui.screens.account.AccountScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.shared.MainTopBar
 import com.example.nextbyte_app.viewmodels.ProductViewModel
+import com.example.nextbyte_app.viewmodels.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    onFavoriteClick: (Product) -> Unit
+    onFavoriteClick: (Product) -> Unit,
+    userViewModel: UserViewModel = viewModel()
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Observar el usuario actual
+    val currentUser by userViewModel.currentUser.collectAsState()
+    val userName = currentUser?.name ?: "Usuario"
 
     val title = when (currentRoute) {
         AppDestinations.Home.route -> "Inicio"
@@ -61,7 +67,8 @@ fun HomeScreen(
         topBar = {
             MainTopBar(
                 title = title,
-                onSettingsClick = { navController.navigate("settings") }
+                onSettingsClick = { navController.navigate("settings") },
+                userViewModel = userViewModel
             )
         },
         bottomBar = {
@@ -74,13 +81,19 @@ fun HomeScreen(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(AppDestinations.Home.route) {
-                HomeContent(navController = navController, onFavoriteClick = onFavoriteClick)
+                HomeContent(
+                    navController = navController,
+                    onFavoriteClick = onFavoriteClick,
+                    userName = userName,
+                    userRole = currentUser?.getRoleDisplayName() ?: "Cliente"
+                )
             }
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
                     navController = navController,
-                    onFavoriteClick = onFavoriteClick
+                    onFavoriteClick = onFavoriteClick,
+                    userViewModel = userViewModel
                 )
             }
 
@@ -89,7 +102,10 @@ fun HomeScreen(
             }
 
             composable(AppDestinations.Account.route) {
-                AccountScreen(navController = bottomNavController)
+                AccountScreen(
+                    navController = bottomNavController,
+                    userViewModel = userViewModel
+                )
             }
         }
     }
@@ -99,6 +115,8 @@ fun HomeScreen(
 fun HomeContent(
     navController: NavController,
     onFavoriteClick: (Product) -> Unit,
+    userName: String,
+    userRole: String,
     productViewModel: ProductViewModel = viewModel()
 ) {
     val products by productViewModel.products.collectAsState()
@@ -109,6 +127,11 @@ fun HomeContent(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // SALUDO PERSONALIZADO
+        item {
+            UserGreetingCard(userName = userName, userRole = userRole)
+        }
+
         // HEADER CON OFERTA ESPECIAL
         item {
             SpecialOfferCard(navController = navController)
@@ -124,19 +147,23 @@ fun HomeContent(
         }
 
         item {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                items(featuredProducts) { product ->
-                    FeaturedProductCard(
-                        product = product,
-                        onProductClick = {
-                            // Navegar al detalle del producto
-                            navController.navigate("product_detail/${product.id}")
-                        },
-                        onFavoriteClick = { onFavoriteClick(product) }
-                    )
+            if (featuredProducts.isEmpty()) {
+                EmptyProductsMessage()
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    items(featuredProducts) { product ->
+                        FeaturedProductCard(
+                            product = product,
+                            onProductClick = {
+                                // Navegar al detalle del producto
+                                // navController.navigate("product_detail/${product.id}")
+                            },
+                            onFavoriteClick = { onFavoriteClick(product) }
+                        )
+                    }
                 }
             }
         }
@@ -151,17 +178,21 @@ fun HomeContent(
         }
 
         item {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                items(bestSellers) { product ->
-                    RatedProductCard(
-                        product = product,
-                        onProductClick = {
-                            navController.navigate("product_detail/${product.id}")
-                        }
-                    )
+            if (bestSellers.isEmpty()) {
+                EmptyProductsMessage()
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    items(bestSellers) { product ->
+                        RatedProductCard(
+                            product = product,
+                            onProductClick = {
+                                // navController.navigate("product_detail/${product.id}")
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -178,9 +209,64 @@ fun HomeContent(
             CategoriesRow(navController = navController)
         }
 
+        // ACCESO RÁPIDO PARA ADMIN/MANAGER
+        item {
+            AdminQuickAccess(navController = navController, userViewModel = userViewModel)
+        }
+
         // ESPACIO FINAL
         item {
             Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+@Composable
+fun UserGreetingCard(userName: String, userRole: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "¡Hola, $userName! 👋",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Rol: $userRole",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+
+            // Badge de rol
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = userRole,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -428,7 +514,7 @@ fun CategoriesRow(navController: NavController) {
                 category = category,
                 emoji = emoji,
                 onClick = {
-                    navController.navigate("productos?category=$category")
+                    navController.navigate(AppDestinations.Productos.route)
                 }
             )
         }
@@ -445,4 +531,89 @@ fun CategoryChip(category: String, emoji: String, onClick: () -> Unit) {
         },
         modifier = Modifier
     )
+}
+
+@Composable
+fun AdminQuickAccess(
+    navController: NavController,
+    userViewModel: UserViewModel = viewModel()
+) {
+    val currentUser by userViewModel.currentUser.collectAsState()
+
+    // Solo mostrar si el usuario es admin o manager
+    if (currentUser?.canAddProducts() == true) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "⚡ Acceso Rápido",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Botón para agregar productos
+                    Button(
+                        onClick = { navController.navigate("add_product") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("➕ Agregar Producto")
+                    }
+
+                    // Botón para panel admin (solo para admins)
+                    if (currentUser?.role?.name == "ADMIN") {
+                        Button(
+                            onClick = { navController.navigate("admin_panel") },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Text("👑 Admin Panel")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyProductsMessage() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "📦 No hay productos disponibles",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "Agrega algunos productos para comenzar",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
+    }
 }

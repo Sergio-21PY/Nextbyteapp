@@ -7,6 +7,7 @@ import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 
@@ -22,6 +23,13 @@ class UserViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    // --- Address State ---
+    private val _addresses = MutableStateFlow<List<String>>(emptyList())
+    val addresses: StateFlow<List<String>> = _addresses.asStateFlow()
+
+    private val _addressUpdateResult = MutableStateFlow<AuthViewModel.UpdateResult?>(null)
+    val addressUpdateResult: StateFlow<AuthViewModel.UpdateResult?> = _addressUpdateResult
+
     // Cargar usuario actual
     fun loadCurrentUser(userId: String) {
         if (userId.isBlank()) return
@@ -30,14 +38,59 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _currentUser.value = repository.getUserById(userId)
+                // También cargamos las direcciones del usuario
+                if (_currentUser.value != null) {
+                    loadAddresses(userId)
+                }
                 Log.d("UserViewModel", "Usuario cargado: ${_currentUser.value?.name}")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error cargando usuario: ${e.message}")
-                e.printStackTrace()
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    // --- Address Functions ---
+    fun loadAddresses(userId: String) {
+        viewModelScope.launch {
+            try {
+                _addresses.value = repository.getUserAddresses(userId)
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error cargando direcciones: ${e.message}")
+            }
+        }
+    }
+
+    fun addAddress(userId: String, address: String) {
+        viewModelScope.launch {
+            if (address.isBlank()) {
+                _addressUpdateResult.value = AuthViewModel.UpdateResult.Error("La dirección no puede estar vacía.")
+                return@launch
+            }
+            val success = repository.addUserAddress(userId, address)
+            if (success) {
+                loadAddresses(userId) // Recargar lista
+                _addressUpdateResult.value = AuthViewModel.UpdateResult.Success
+            } else {
+                _addressUpdateResult.value = AuthViewModel.UpdateResult.Error("No se pudo agregar la dirección.")
+            }
+        }
+    }
+
+    fun deleteAddress(userId: String, address: String) {
+        viewModelScope.launch {
+            val success = repository.deleteUserAddress(userId, address)
+            if (success) {
+                loadAddresses(userId) // Recargar lista
+            } else {
+                // Opcional: comunicar error a la UI
+            }
+        }
+    }
+    
+    fun resetAddressUpdateResult() {
+        _addressUpdateResult.value = null
     }
 
     // Cargar todos los usuarios (solo admin)
@@ -54,67 +107,19 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    // Actualizar perfil
-    fun updateUserProfile(userId: String, name: String, phone: String, address: String) {
-        viewModelScope.launch {
-            try {
-                val userData = mapOf(
-                    "name" to name,
-                    "phone" to phone,
-                    "address" to address,
-                    "updatedAt" to com.google.firebase.Timestamp.now()
-                )
-                val success = repository.updateUserProfile(userId, userData)
-                if (success) {
-                    // Recargar usuario actualizado
-                    loadCurrentUser(userId)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
     // Actualizar rol (solo admin)
     fun updateUserRole(userId: String, newRole: UserRole) {
         viewModelScope.launch {
-            try {
-                val success = repository.updateUserRole(userId, newRole)
-                if (success) {
-                    // Recargar lista de usuarios
-                    loadAllUsers()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            val success = repository.updateUserRole(userId, newRole)
+            if (success) {
+                loadAllUsers()
             }
         }
     }
 
-    // Verificar permisos - VERSIÓN SIMPLIFICADA
-    val canAddProducts: Boolean
-        get() = currentUser.value?.let { user ->
-            user.role == UserRole.ADMIN || user.role == UserRole.MANAGER
-        } ?: false
-
-    val canEditProducts: Boolean
-        get() = currentUser.value?.let { user ->
-            user.role == UserRole.ADMIN || user.role == UserRole.MANAGER
-        } ?: false
-
-    val canDeleteProducts: Boolean
-        get() = currentUser.value?.let { user ->
-            user.role == UserRole.ADMIN
-        } ?: false
-
-    val isAdmin: Boolean
-        get() = currentUser.value?.role == UserRole.ADMIN
-
-    val isManager: Boolean
-        get() = currentUser.value?.role == UserRole.MANAGER
-
-    // Cerrar sesión
     fun clearUser() {
         _currentUser.value = null
         _allUsers.value = emptyList()
+        _addresses.value = emptyList()
     }
 }

@@ -14,14 +14,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,27 +34,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-data class SettingItem( val title: String, val icon: ImageVector, val route: String)
+// Se restaura la clase de datos que fue eliminada por error
+data class SettingItem(val title: String, val icon: ImageVector, val route: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
-    val settingItems = listOf(
-        SettingItem("Opciones de cuenta", Icons.Default.Settings, "account_options"),
-        SettingItem("Favoritos", Icons.Default.FavoriteBorder, "favorites"),
-        SettingItem("Pedidos anteriores", Icons.Default.History, "past_orders"),
-        SettingItem("Tiendas físicas", Icons.Default.Store, "physical_stores"),
+    val generalSettingItems = listOf(
         SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),
+        SettingItem("Tiendas físicas", Icons.Default.Store, "physical_stores"),
+    )
+
+    val legalAndHelpItems = listOf(
         SettingItem("Ayuda", Icons.AutoMirrored.Filled.HelpOutline, "help"),
         SettingItem("Términos y condiciones", Icons.AutoMirrored.Filled.Notes, "terms_and_conditions"),
         SettingItem("Acerca de Next Byte", Icons.Default.Info, "about_nextbyte"),
-        SettingItem("Salir de la cuenta", Icons.AutoMirrored.Filled.Logout, "logout")
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ajustes") },
+                title = { Text("Ajustes Generales") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -71,11 +67,28 @@ fun SettingsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = 16.dp)
+            contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            items(settingItems) { item ->
+            item {
+                Text(
+                    "General", 
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            items(generalSettingItems) { item ->
                 SettingListItem(item = item, onClick = { navController.navigate(item.route) })
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            }
+            item { Spacer(modifier = Modifier.padding(8.dp)) }
+            item {
+                Text(
+                    "Información y Soporte", 
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            items(legalAndHelpItems) { item ->
+                SettingListItem(item = item, onClick = { navController.navigate(item.route) })
             }
         }
     }
@@ -83,28 +96,25 @@ fun SettingsScreen(navController: NavController) {
 
 @Composable
 fun SettingListItem(item: SettingItem, onClick: () -> Unit) {
-    val isDestructiveAction = item.title == "Salir de la cuenta"
-    val color = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 20.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = item.icon,
             contentDescription = item.title,
             modifier = Modifier.size(26.dp),
-            tint = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            tint = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(20.dp))
         Text(
             text = item.title,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
-            color = color
+            color = MaterialTheme.colorScheme.onSurface
         )
         Icon(
             imageVector = Icons.Default.ChevronRight,

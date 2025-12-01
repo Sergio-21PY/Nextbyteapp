@@ -23,7 +23,7 @@ import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
-import com.example.nextbyte_app.ui.screens.account.AccountScreen
+import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
@@ -48,14 +48,18 @@ class MainActivity : ComponentActivity() {
 
                 val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
-                val currentUser by authViewModel.currentUser.collectAsState()
 
-                LaunchedEffect(currentUser) {
-                    if (currentUser != null) {
+                LaunchedEffect(isUserLoggedIn) {
+                    if (isUserLoggedIn) {
                         val uid = authViewModel.getCurrentUserId()
-                        if (uid.isNotEmpty()) userViewModel.loadCurrentUser(uid)
+                        if (uid.isNotEmpty()) {
+                            userViewModel.loadCurrentUser(uid)
+                        }
                     } else {
                         userViewModel.clearUser()
+                        navController.navigate("welcome") {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        }
                     }
                 }
 
@@ -77,25 +81,18 @@ class MainActivity : ComponentActivity() {
                             composable("favorites") { FavoritosScreen(navController, cartViewModel) }
                             composable("add_product") { AddProductScreen(navController) }
 
-                            // --- Rutas de Ajustes ---
+                            // --- Rutas de Ajustes y Cuenta ---
                             composable("settings") { SettingsScreen(navController = navController) }
-                            composable("account_options") { UserSettingsScreen(navController = navController) }
-                            composable("change_email") { PlaceholderScreen(navController = navController, "Cambiar Correo") }
-                            composable("change_password") { PlaceholderScreen(navController = navController, "Cambiar Contraseña") }
-                            composable("change_address") { PlaceholderScreen(navController = navController, "Cambiar Dirección") }
+                            composable("change_email") { ChangeEmailScreen(navController = navController, authViewModel = authViewModel) }
+                            composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }
+                            composable("change_address") { AddressScreen(navController = navController, userViewModel = userViewModel, authViewModel = authViewModel) }
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                             composable("notifications") { NotificationsScreen(navController = navController) }
                             composable("help") { HelpScreen(navController = navController) }
                             composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                             composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
-                            composable("logout") {
-                                LaunchedEffect(Unit) {
-                                    authViewModel.logout()
-                                    userViewModel.clearUser()
-                                    navController.navigate("welcome") { popUpTo("home") { inclusive = true } }
-                                }
-                            }
+                            composable("admin_panel") { AdminPanelScreen(navController = navController) }
                         }
                     }
                 }
@@ -107,35 +104,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            CircularProgressIndicator()
-            Text("Cargando...")
-        }
+        CircularProgressIndicator()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaceholderScreen(navController: NavController, text: String) {
+fun PlaceholderScreen(navController: NavController, title: String) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Atrás") } }
-            )
+            TopAppBar(title = { Text(title) }, navigationIcon = { 
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                }
+            })
         }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-            Text("Pantalla de '$text' en construcción.")
+            Text("Pantalla en construcción")
         }
     }
-}
-
-@Composable
-inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
-    val navGraphRoute = destination.parent?.route ?: return viewModel()
-    val parentEntry = remember(this) {
-        navController.getBackStackEntry(navGraphRoute)
-    }
-    return viewModel(parentEntry)
 }

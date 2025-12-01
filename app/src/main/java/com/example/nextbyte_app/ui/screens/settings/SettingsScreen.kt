@@ -1,7 +1,6 @@
 package com.example.nextbyte_app.ui.screens.settings
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Notes
@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Divider
@@ -62,7 +61,7 @@ fun SettingsScreen(navController: NavController) {
                 title = { Text("Ajustes") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.Remove, contentDescription = "Cerrar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
@@ -85,7 +84,7 @@ fun SettingsScreen(navController: NavController) {
 @Composable
 fun SettingListItem(item: SettingItem, onClick: () -> Unit) {
     val isDestructiveAction = item.title == "Salir de la cuenta"
-    val color = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val color = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
 
     Row(
         modifier = Modifier
@@ -98,14 +97,14 @@ fun SettingListItem(item: SettingItem, onClick: () -> Unit) {
             imageVector = item.icon,
             contentDescription = item.title,
             modifier = Modifier.size(26.dp),
-            tint = color
+            tint = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(20.dp))
         Text(
             text = item.title,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
-            color = if (isDestructiveAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            color = color
         )
         Icon(
             imageVector = Icons.Default.ChevronRight,

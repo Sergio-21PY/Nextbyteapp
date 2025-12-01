@@ -37,7 +37,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun signOut() {
+    fun logout() {
         auth.signOut()
         _isUserLoggedIn.value = false
         _currentUser.value = null

@@ -10,15 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.ui.shared.ProductCard
+import com.example.nextbyte_app.viewmodels.CartViewModel
 import com.example.nextbyte_app.viewmodels.ProductViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.nextbyte_app.viewmodels.CartProduct
 
 @Composable
 fun FavoritosScreen(
-    navController: NavController
+    navController: NavController,
+    cartViewModel: CartViewModel // <-- Recibido como parámetro
 ) {
     val productViewModel: ProductViewModel = viewModel()
     val products by productViewModel.products.collectAsState()
@@ -79,14 +81,18 @@ fun FavoritosScreen(
                     product = product,
                     onProductClick = {
                         // Navegar al detalle del producto
-                        // navController.navigate("product_detail/${product.id}")
                     },
                     onAddToCartClick = {
-                        // Agregar al carrito - puedes implementar esto después
+                        val cartProduct = CartProduct(
+                            id = product.id,
+                            name = product.name,
+                            price = product.price.toDouble(),
+                            imageUrl = product.imageUrl
+                        )
+                        cartViewModel.addItem(cartProduct)
                     },
                     onFavoriteClick = {
                         // Lógica para quitar de favoritos
-                        // Por ahora, puedes implementar un toggle simple
                     }
                 )
                 Spacer(modifier = Modifier.height(12.dp))

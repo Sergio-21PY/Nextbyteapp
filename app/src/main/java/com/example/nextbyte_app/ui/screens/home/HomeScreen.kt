@@ -16,20 +16,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.compose.NavHost
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.ui.screens.AppDestinations
@@ -38,20 +37,22 @@ import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.account.AccountScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.shared.MainTopBar
+import com.example.nextbyte_app.viewmodels.AuthViewModel
+import com.example.nextbyte_app.viewmodels.CartViewModel
 import com.example.nextbyte_app.viewmodels.ProductViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    cartViewModel: CartViewModel,
+    authViewModel: AuthViewModel,
+    userViewModel: UserViewModel
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val userViewModel: UserViewModel = viewModel()
 
-    // Observar el usuario actual
     val currentUserState = userViewModel.currentUser.collectAsState()
     val currentUser = currentUserState.value
     val userName = currentUser?.name ?: "Usuario"
@@ -70,7 +71,6 @@ fun HomeScreen(
             MainTopBar(
                 title = title,
                 onSettingsClick = { navController.navigate("settings") }
-                // Eliminar userViewModel = userViewModel
             )
         },
         bottomBar = {
@@ -92,17 +92,23 @@ fun HomeScreen(
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
-                    navController = navController
+                    navController = navController,
+                    cartViewModel = cartViewModel
                 )
             }
 
             composable(AppDestinations.Cart.route) {
-                CarritoScreen(navController = navController)
+                CarritoScreen(
+                    navController = navController,
+                    cartViewModel = cartViewModel
+                )
             }
 
             composable(AppDestinations.Account.route) {
                 AccountScreen(
-                    navController = bottomNavController
+                    navController = bottomNavController,
+                    authViewModel = authViewModel,
+                    userViewModel = userViewModel
                 )
             }
         }
@@ -117,24 +123,15 @@ fun HomeContent(
     productViewModel: ProductViewModel = viewModel()
 ) {
     val products by productViewModel.products.collectAsState()
-    val featuredProducts = products.take(4) // Primeros 4 productos como destacados
+    val featuredProducts = products.take(4)
     val bestSellers = products.filter { it.rating >= 4.5 }.take(6)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // SALUDO PERSONALIZADO
-        item {
-            UserGreetingCard(userName = userName, userRole = userRole)
-        }
-
-        // HEADER CON OFERTA ESPECIAL
-        item {
-            SpecialOfferCard(navController = navController)
-        }
-
-        // SECCIÓN DE PRODUCTOS DESTACADOS
+        item { UserGreetingCard(userName = userName, userRole = userRole) }
+        item { SpecialOfferCard(navController = navController) }
         item {
             SectionHeader(
                 title = "🔥 Productos Destacados",
@@ -142,7 +139,6 @@ fun HomeContent(
                 onSeeAllClick = { navController.navigate(AppDestinations.Productos.route) }
             )
         }
-
         item {
             if (featuredProducts.isEmpty()) {
                 EmptyProductsMessage()
@@ -152,19 +148,11 @@ fun HomeContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     items(featuredProducts) { product ->
-                        FeaturedProductCard(
-                            product = product,
-                            onProductClick = {
-                                // Navegar al detalle del producto
-                                // navController.navigate("product_detail/${product.id}")
-                            }
-                        )
+                        FeaturedProductCard(product = product, onProductClick = {})
                     }
                 }
             }
         }
-
-        // SECCIÓN DE MEJORES CALIFICADOS
         item {
             SectionHeader(
                 title = "⭐ Mejor Calificados",
@@ -172,7 +160,6 @@ fun HomeContent(
                 onSeeAllClick = { navController.navigate(AppDestinations.Productos.route) }
             )
         }
-
         item {
             if (bestSellers.isEmpty()) {
                 EmptyProductsMessage()
@@ -182,56 +169,27 @@ fun HomeContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     items(bestSellers) { product ->
-                        RatedProductCard(
-                            product = product,
-                            onProductClick = {
-                                // navController.navigate("product_detail/${product.id}")
-                            }
-                        )
+                        RatedProductCard(product = product, onProductClick = {})
                     }
                 }
             }
         }
-
-        // CATEGORÍAS
-        item {
-            SectionHeader(
-                title = "📱 Categorías",
-                subtitle = "Explora por categoría"
-            )
-        }
-
-        item {
-            CategoriesRow(navController = navController)
-        }
-
-        // ACCESO RÁPIDO PARA ADMIN/MANAGER
-        item {
-            AdminQuickAccess(navController = navController)
-        }
-
-        // ESPACIO FINAL
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
-        }
+        item { SectionHeader(title = "📱 Categorías", subtitle = "Explora por categoría") }
+        item { CategoriesRow(navController = navController) }
+        item { AdminQuickAccess(navController = navController) }
+        item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 
 @Composable
 fun UserGreetingCard(userName: String, userRole: String) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -249,8 +207,6 @@ fun UserGreetingCard(userName: String, userRole: String) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
             }
-
-            // Badge de rol
             Surface(
                 color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(8.dp)
@@ -270,65 +226,30 @@ fun UserGreetingCard(userName: String, userRole: String) {
 @Composable
 fun SpecialOfferCard(navController: NavController) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .height(160.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp).height(160.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF6A1B9A) // Color morado
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF6A1B9A))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Gradiente de fondo
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF8E24AA),
-                                Color(0xFF6A1B9A)
-                            )
-                        )
-                    )
+                modifier = Modifier.fillMaxSize().background(
+                    brush = Brush.verticalGradient(colors = listOf(Color(0xFF8E24AA), Color(0xFF6A1B9A)))
+                )
             )
-
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
+                modifier = Modifier.fillMaxSize().padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "OFERTA ESPECIAL",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("OFERTA ESPECIAL", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Hasta 40% OFF",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Hasta 40% OFF", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "En smartphones seleccionados",
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 14.sp
-                    )
+                    Text("En smartphones seleccionados", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { navController.navigate(AppDestinations.Productos.route) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF6A1B9A)
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF6A1B9A))
                     ) {
                         Text("Ver Ofertas", fontWeight = FontWeight.Bold)
                     }
@@ -339,32 +260,16 @@ fun SpecialOfferCard(navController: NavController) {
 }
 
 @Composable
-fun SectionHeader(
-    title: String,
-    subtitle: String,
-    onSeeAllClick: (() -> Unit)? = null
-) {
+fun SectionHeader(title: String, subtitle: String, onSeeAllClick: (() -> Unit)? = null) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(
-                text = title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
-
         onSeeAllClick?.let {
             TextButton(onClick = it) {
                 Text("Ver todo", color = MaterialTheme.colorScheme.primary)
@@ -374,68 +279,27 @@ fun SectionHeader(
 }
 
 @Composable
-fun FeaturedProductCard(
-    product: Product,
-    onProductClick: () -> Unit
-) {
+fun FeaturedProductCard(product: Product, onProductClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .width(280.dp)
-            .height(120.dp),
+        modifier = Modifier.width(280.dp).height(120.dp),
         shape = RoundedCornerShape(16.dp),
         onClick = onProductClick
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
-                    .crossfade(true)
-                    .build(),
+                model = ImageRequest.Builder(LocalContext.current).data(product.imageUrl).crossfade(true).build(),
                 contentDescription = product.name,
-                modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier.width(100.dp).fillMaxHeight().clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
-
-            Column(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .weight(1f)
-            ) {
-                Text(
-                    text = product.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
+            Column(modifier = Modifier.padding(12.dp).weight(1f)) {
+                Text(product.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "$${product.price}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
+                Text("$${product.price}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.Star,
-                        contentDescription = "Rating",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFFFFA000)
-                    )
-                    Text(
-                        text = "${product.rating}",
-                        fontSize = 12.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
+                    Icon(Icons.Filled.Star, contentDescription = "Rating", modifier = Modifier.size(16.dp), tint = Color(0xFFFFA000))
+                    Text("${product.rating}", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(start = 4.dp))
                 }
             }
         }
@@ -443,47 +307,23 @@ fun FeaturedProductCard(
 }
 
 @Composable
-fun RatedProductCard(
-    product: Product,
-    onProductClick: () -> Unit
-) {
+fun RatedProductCard(product: Product, onProductClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .width(150.dp),
+        modifier = Modifier.width(150.dp),
         shape = RoundedCornerShape(12.dp),
         onClick = onProductClick
     ) {
         Column {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
-                    .crossfade(true)
-                    .build(),
+                model = ImageRequest.Builder(LocalContext.current).data(product.imageUrl).crossfade(true).build(),
                 contentDescription = product.name,
-                modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp)),
+                modifier = Modifier.height(120.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-
             Column(modifier = Modifier.padding(8.dp)) {
-                Text(
-                    text = product.name,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
+                Text(product.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "$${product.price}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Text("$${product.price}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -492,92 +332,45 @@ fun RatedProductCard(
 @Composable
 fun CategoriesRow(navController: NavController) {
     val categories = listOf(
-        "Smartphones" to "📱",
-        "Laptops" to "💻",
-        "Tablets" to "📟",
-        "Audio" to "🎧",
-        "Smartwatch" to "⌚",
-        "Accesorios" to "🔌"
+        "Smartphones" to "📱", "Laptops" to "💻", "Tablets" to "📟",
+        "Audio" to "🎧", "Smartwatch" to "⌚", "Accesorios" to "🔌"
     )
-
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         items(categories) { (category, emoji) ->
-            CategoryChip(
-                category = category,
-                emoji = emoji,
-                onClick = {
-                    navController.navigate(AppDestinations.Productos.route)
-                }
-            )
+            CategoryChip(category, emoji) { navController.navigate(AppDestinations.Productos.route) }
         }
     }
 }
 
 @Composable
 fun CategoryChip(category: String, emoji: String, onClick: () -> Unit) {
-    FilterChip(
-        selected = false,
-        onClick = onClick,
-        label = {
-            Text("$emoji $category")
-        },
-        modifier = Modifier
-    )
+    FilterChip(selected = false, onClick = onClick, label = { Text("$emoji $category") })
 }
 
 @Composable
-fun AdminQuickAccess(
-    navController: NavController
-) {
+fun AdminQuickAccess(navController: NavController) {
     val userViewModel: UserViewModel = viewModel()
-    val currentUserState = userViewModel.currentUser.collectAsState()
-    val currentUser = currentUserState.value
-
-    // Solo mostrar si el usuario es admin o manager - CORREGIDO
+    val currentUser by userViewModel.currentUser.collectAsState()
     if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "⚡ Acceso Rápido",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("⚡ Acceso Rápido", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Botón para agregar productos
-                    Button(
-                        onClick = { navController.navigate("add_product") },
-                        modifier = Modifier.weight(1f)
-                    ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = { navController.navigate("add_product") }, modifier = Modifier.weight(1f)) {
                         Text("➕ Agregar Producto")
                     }
-
-                    // Botón para panel admin (solo para admins)
                     if (currentUser?.role == UserRole.ADMIN) {
                         Button(
                             onClick = { navController.navigate("admin_panel") },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
                         ) {
                             Text("👑 Admin Panel")
                         }
@@ -590,31 +383,14 @@ fun AdminQuickAccess(
 
 @Composable
 fun EmptyProductsMessage() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "📦 No hay productos disponibles",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-            Text(
-                text = "Agrega algunos productos para comenzar",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-            )
+    Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("📦 No hay productos disponibles", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text("Agrega algunos productos para comenzar", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
         }
     }
 }
 
-// Función helper para obtener el nombre del rol
 private fun getRoleDisplayName(role: UserRole): String {
     return when (role) {
         UserRole.ADMIN -> "Administrador"

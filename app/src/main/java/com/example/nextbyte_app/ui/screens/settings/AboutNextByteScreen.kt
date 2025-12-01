@@ -1,11 +1,10 @@
 package com.example.nextbyte_app.ui.screens.settings
 
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,8 +17,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,79 +27,38 @@ fun AboutNextByteScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Acerca de Next-Byte") },
+                title = { Text("Acerca de Next Byte") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp)
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            item {
-                Text(
-                    text = "Más que una tienda, somos tu próximo destino tecnológico.",
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-            }
-
-            item { SectionTitle(title = "Nuestra Misión") }
-            item {
-                SectionParagraph(
-                    text = "En Next-Byte, nuestra misión es simple: conectar a los apasionados de la tecnología con los mejores productos del mercado. Creemos que la tecnología no solo debe ser funcional, sino también inspiradora. Por eso, seleccionamos cuidadosamente cada artículo de nuestro catálogo, asegurando que cumpla con los más altos estándares de calidad, innovación y rendimiento."
-                )
-            }
-
-            item { SectionTitle(title = "Nuestra Historia") }
-            item {
-                SectionParagraph(
-                    text = "Next-Byte nació de la pasión de un grupo de entusiastas del hardware y el gaming que soñaban con crear un espacio donde otros aficionados pudieran encontrar no solo componentes, sino también asesoramiento experto y una comunidad. Lo que comenzó como un pequeño proyecto se ha convertido en una de las tiendas de tecnología de referencia, pero nuestro espíritu sigue siendo el mismo: amor por la tecnología y compromiso con nuestros clientes."
-                )
-            }
-
-            item { SectionTitle(title = "Nuestro Compromiso") }
-            item {
-                SectionParagraph(
-                    text = "Tu satisfacción es nuestra prioridad. Desde el momento en que navegas por nuestra app hasta que recibes tu producto en casa, nos esforzamos por ofrecerte una experiencia de compra excepcional. Nuestro equipo está siempre disponible para ayudarte a encontrar el producto perfecto, resolver tus dudas y asegurarse de que quedes 100% satisfecho con tu compra."
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Gracias por formar parte de la comunidad Next-Byte. ¡Explora, descubre y lleva tu setup al siguiente nivel!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            }
+            Text(
+                text = "Bienvenido a Next Byte",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(
+                text = "Tu tienda online de confianza para encontrar lo último y lo mejor en tecnología. Nos dedicamos a ofrecerte una cuidada selección de productos, desde smartphones y laptops de última generación hasta accesorios innovadores y gadgets que mejoran tu día a día.",
+                fontSize = 16.sp, 
+                lineHeight = 24.sp
+            )
+            Spacer(modifier = Modifier.padding(16.dp))
+            Text(
+                text = "En Next Byte, creemos que la tecnología debe ser accesible, funcional y emocionante. Nuestro compromiso es con la calidad, el buen servicio y, por supuesto, con los mejores precios del mercado. ¡Gracias por elegirnos!",
+                fontSize = 16.sp, 
+                lineHeight = 24.sp
+            )
         }
     }
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-}
-
-@Composable
-private fun SectionParagraph(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.padding(bottom = 16.dp)
-    )
 }

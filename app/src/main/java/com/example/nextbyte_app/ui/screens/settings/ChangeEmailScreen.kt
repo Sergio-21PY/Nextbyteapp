@@ -1,8 +1,8 @@
 package com.example.nextbyte_app.ui.screens.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,16 +25,17 @@ import androidx.navigation.NavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeEmailScreen(navController: NavController) {
+    var currentEmail by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cambiar correo") },
+                title = { Text("Cambiar Correo") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
@@ -42,32 +43,35 @@ fun ChangeEmailScreen(navController: NavController) {
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Introduce tu nuevo correo electrónico y tu contraseña para confirmar.")
-            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = currentEmail,
+                onValueChange = { currentEmail = it },
+                label = { Text("Correo actual") },
+                modifier = Modifier.fillMaxWidth()
+            )
             OutlinedTextField(
                 value = newEmail,
                 onValueChange = { newEmail = it },
-                label = { Text("Nuevo correo electrónico") },
+                label = { Text("Correo nuevo") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña actual") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* TODO: Implement email change logic */ },
+                onClick = { /* Lógica para cambiar correo */ },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar cambios")
+                Text("Cambiar Correo")
             }
         }
     }

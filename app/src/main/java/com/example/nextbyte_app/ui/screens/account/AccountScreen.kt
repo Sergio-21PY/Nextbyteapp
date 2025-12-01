@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextbyte_app.R
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
@@ -55,19 +54,16 @@ import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @Composable
 fun AccountScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    userViewModel: UserViewModel
 ) {
-    val userViewModel: UserViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel()
-
-    // CORREGIDO: Usar .value en lugar de delegación con 'by'
     val currentUserState = userViewModel.currentUser.collectAsState()
     val isLoadingState = userViewModel.isLoading.collectAsState()
 
     val currentUser = currentUserState.value
     val isLoading = isLoadingState.value
 
-    // Cargar usuario si no está cargado
     LaunchedEffect(Unit) {
         val userId = authViewModel.getCurrentUserId()
         if (userId.isNotEmpty() && currentUser == null) {
@@ -90,7 +86,6 @@ fun AccountScreen(
                 Text("Cargando información...")
             }
         } else if (currentUser != null) {
-            // Usuario logueado - mostrar información real
             ProfileHeader(user = currentUser)
             Spacer(modifier = Modifier.height(32.dp))
             SettingsSection(
@@ -100,15 +95,14 @@ fun AccountScreen(
             Spacer(modifier = Modifier.weight(1f))
             LogoutButton(
                 onClick = {
-                    authViewModel.signOut()
+                    authViewModel.logout()
                     userViewModel.clearUser()
                     navController.navigate("welcome") {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 }
             )
         } else {
-            // No hay usuario logueado o error
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -140,7 +134,6 @@ fun AccountScreen(
 @Composable
 fun ProfileHeader(user: User) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Determinar imagen de perfil basada en el rol
         val profileImageRes = when {
             user.role == UserRole.ADMIN -> R.drawable.img
             user.role == UserRole.MANAGER -> R.drawable.img
@@ -174,7 +167,6 @@ fun ProfileHeader(user: User) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(8.dp))
-        // Mostrar rol del usuario - CORREGIDO: Usar función helper
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
@@ -189,7 +181,7 @@ fun ProfileHeader(user: User) {
                 .padding(horizontal = 12.dp, vertical = 4.dp)
         ) {
             Text(
-                text = getRoleDisplayName(user.role), // Función helper
+                text = getRoleDisplayName(user.role),
                 color = Color.White,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
@@ -244,7 +236,6 @@ fun SettingsSection(
                 navController.navigate("help")
             }
 
-            // Mostrar opciones de administrador si corresponde - CORREGIDO
             if (canViewAdminPanel(user)) {
                 AdminSettings(navController = navController)
             }
@@ -272,7 +263,6 @@ fun AdminSettings(navController: NavController) {
             icon = Icons.Default.Person,
             title = "Estadísticas"
         ) {
-            // navController.navigate("statistics") // Puedes crear esta pantalla después
         }
         SettingsItem(
             icon = Icons.Default.Edit,
@@ -335,7 +325,6 @@ fun LogoutButton(onClick: () -> Unit) {
     }
 }
 
-// Funciones helper para AccountScreen
 private fun getRoleDisplayName(role: UserRole): String {
     return when (role) {
         UserRole.ADMIN -> "Administrador"

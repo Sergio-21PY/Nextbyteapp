@@ -1,11 +1,10 @@
 package com.example.nextbyte_app.ui.screens.settings
 
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,88 +30,53 @@ fun TermsAndConditionsScreen(navController: NavController) {
                 title = { Text("Términos y Condiciones") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp)
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            item {
-                Text(
-                    text = "Última actualización: 24 de mayo de 2024",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            item {
-                Text(
-                    text = "Bienvenido a Next-Byte. Al utilizar nuestra aplicación, aceptas los siguientes términos y condiciones. Por favor, léelos con atención.",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            item { SectionTitle(title = "1. Uso de la Cuenta") }
-            item {
-                SectionParagraph(
-                    text = "Para realizar compras y acceder a ciertas funciones, es posible que debas crear una cuenta. Eres responsable de mantener la confidencialidad de tu contraseña y de toda la actividad que ocurra en tu cuenta. Debes ser mayor de 18 años para crear una cuenta y realizar compras."
-                )
-            }
-
-            item { SectionTitle(title = "2. Propiedad Intelectual") }
-            item {
-                SectionParagraph(
-                    text = "Todo el contenido presente en esta aplicación, incluyendo textos, gráficos, logos, iconos y software, es propiedad de Next-Byte o de sus proveedores de contenido, y está protegido por las leyes de propiedad intelectual. No se permite la reproducción, modificación o distribución del contenido sin nuestro consentimiento expreso por escrito."
-                )
-            }
-
-            item { SectionTitle(title = "3. Compras y Pagos") }
-            item {
-                SectionParagraph(
-                    text = "Next-Byte se esfuerza por mostrar los precios y la disponibilidad de los productos de la manera más precisa posible. Sin embargo, nos reservamos el derecho de corregir cualquier error en los precios o en la información del producto en cualquier momento. Todas las ventas son finales, sujetas a nuestras políticas de devolución y garantía."
-                )
-            }
-
-            item { SectionTitle(title = "4. Limitación de Responsabilidad") }
-            item {
-                SectionParagraph(
-                    text = "El uso de esta aplicación es bajo tu propio riesgo. Next-Byte no garantiza que el servicio sea ininterrumpido o libre de errores. En la máxima medida permitida por la ley, Next-Byte no será responsable de ningún daño directo, indirecto, incidental o consecuente que resulte del uso o la incapacidad de usar nuestra aplicación."
-                )
-            }
-
-            item { SectionTitle(title = "5. Modificaciones de los Términos") }
-            item {
-                SectionParagraph(
-                    text = "Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento. Cualquier cambio será efectivo inmediatamente después de su publicación en la aplicación. Te recomendamos revisar esta página periódicamente para estar al tanto de las actualizaciones."
-                )
-            }
+            Text(
+                text = "1. Aceptación de los Términos",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(
+                text = "Al acceder y utilizar la aplicación Next Byte (la 'App'), usted acepta y se compromete a cumplir los presentes términos y condiciones de uso. Si no está de acuerdo con estos términos, por favor no utilice la App.",
+                fontSize = 16.sp, 
+                lineHeight = 24.sp
+            )
+            Spacer(modifier = Modifier.padding(16.dp))
+            Text(
+                text = "2. Política de Privacidad",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(
+                text = "Nos comprometemos a proteger su privacidad. La información personal que nos proporcione será utilizada únicamente para procesar sus pedidos, mejorar su experiencia de compra y comunicarnos con usted. No venderemos, alquilaremos ni compartiremos su información personal con terceros sin su consentimiento, excepto cuando sea requerido por la ley.",
+                fontSize = 16.sp, 
+                lineHeight = 24.sp
+            )
+            Spacer(modifier = Modifier.padding(16.dp))
+            Text(
+                text = "3. Política de Devoluciones y Garantías",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(
+                text = "Ofrecemos una política de devolución de 30 días en la mayoría de los productos. Los productos deben ser devueltos en su estado y embalaje original, sin usar. Todos los productos nuevos tienen una garantía de un año del fabricante. Los productos reacondicionados o de segunda mano tienen una garantía limitada de 90 días. Por favor, consulte la página de cada producto para detalles específicos de la garantía.",
+                fontSize = 16.sp, 
+                lineHeight = 24.sp
+            )
         }
     }
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-}
-
-@Composable
-private fun SectionParagraph(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.padding(bottom = 16.dp)
-    )
 }

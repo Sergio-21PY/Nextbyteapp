@@ -12,9 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,8 +21,8 @@ import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
-import com.example.nextbyte_app.ui.screens.account.ChangeEmailScreen
 import com.example.nextbyte_app.ui.screens.account.ChangePasswordScreen
+import com.example.nextbyte_app.ui.screens.account.ChangePhoneNumberScreen
 import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
@@ -86,7 +84,7 @@ class MainActivity : ComponentActivity() {
 
                             // --- Rutas de Ajustes y Cuenta ---
                             composable("settings") { SettingsScreen(navController = navController) }
-                            composable("change_email") { ChangeEmailScreen(navController = navController, authViewModel = authViewModel) }
+                            composable("change_phone") { ChangePhoneNumberScreen(navController = navController, userViewModel = userViewModel) }
                             composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }
                             composable("change_address") { ManageAddressScreen(navController = navController, userViewModel = userViewModel) }
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }

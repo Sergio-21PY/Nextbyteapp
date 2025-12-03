@@ -23,6 +23,10 @@ class UserViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    // --- General Profile Update State ---
+    private val _updateResult = MutableStateFlow<AuthViewModel.UpdateResult?>(null)
+    val updateResult: StateFlow<AuthViewModel.UpdateResult?> = _updateResult
+
     // --- Address State ---
     private val _addresses = MutableStateFlow<List<String>>(emptyList())
     val addresses: StateFlow<List<String>> = _addresses.asStateFlow()
@@ -30,25 +34,44 @@ class UserViewModel : ViewModel() {
     private val _addressUpdateResult = MutableStateFlow<AuthViewModel.UpdateResult?>(null)
     val addressUpdateResult: StateFlow<AuthViewModel.UpdateResult?> = _addressUpdateResult
 
-    // Cargar usuario actual
     fun loadCurrentUser(userId: String) {
         if (userId.isBlank()) return
 
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                _currentUser.value = repository.getUserById(userId)
-                // También cargamos las direcciones del usuario
-                if (_currentUser.value != null) {
-                    loadAddresses(userId)
+                val user = repository.getUserById(userId)
+                _currentUser.value = user
+                if (user != null) {
+                    loadAddresses(user.uid)
                 }
-                Log.d("UserViewModel", "Usuario cargado: ${_currentUser.value?.name}")
+                Log.d("UserViewModel", "Usuario cargado: ${user?.name}")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error cargando usuario: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    // --- Profile Update Functions ---
+    fun updatePhoneNumber(userId: String, newPhoneNumber: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.updateUserProfile(userId, mapOf("phone" to newPhoneNumber))
+            if (success) {
+                // Recargamos el usuario para tener los datos frescos
+                loadCurrentUser(userId)
+                _updateResult.value = AuthViewModel.UpdateResult.Success
+            } else {
+                _updateResult.value = AuthViewModel.UpdateResult.Error("No se pudo actualizar el número de teléfono.")
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun resetUpdateResult() {
+        _updateResult.value = null
     }
 
     // --- Address Functions ---

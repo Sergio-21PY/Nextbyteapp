@@ -21,7 +21,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.nextbyte_app.R
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
@@ -30,12 +29,11 @@ import com.example.nextbyte_app.ui.screens.settings.SettingListItem
 import com.example.nextbyte_app.viewmodels.AuthViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
 
-// LA FIRMA DE LA FUNCIÓN HA CAMBIADO
 @Composable
 fun AccountScreen(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
-    onNavigate: (String) -> Unit // No más NavController, usamos una lambda
+    onNavigate: (String) -> Unit
 ) {
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
@@ -72,9 +70,10 @@ fun AccountScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // LA CORRECCIÓN ESTÁ AQUÍ:
             LogoutButton {
-                authViewModel.logout()
-                userViewModel.clearUser()
+                authViewModel.logout() // Solo iniciamos el logout
+                // La navegación y la limpieza de datos se manejan centralmente
             }
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -87,7 +86,7 @@ fun AccountScreen(
 @Composable
 fun UserDashboard(onNavigate: (String) -> Unit) {
     val userAccountItems = listOf(
-        SettingItem("Cambiar correo", Icons.Default.Email, "change_email"),
+        SettingItem("Cambiar número de teléfono", Icons.Default.Phone, "change_phone"),
         SettingItem("Cambiar contraseña", Icons.Default.Lock, "change_password"),
         SettingItem("Gestionar direcciones", Icons.Default.LocationOn, "change_address")
     )
@@ -151,7 +150,8 @@ fun ProfileHeader(user: User) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = user.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = user.email, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // Mostramos el teléfono si está disponible
+        Text(text = user.phone.ifEmpty { user.email }, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

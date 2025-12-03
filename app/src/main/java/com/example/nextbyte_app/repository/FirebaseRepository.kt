@@ -97,8 +97,15 @@ class FirebaseRepository {
 
     suspend fun changeUserEmail(newEmail: String): Boolean {
         return try {
-            auth.currentUser!!.updateEmail(newEmail).await()
-            db.collection("users").document(auth.currentUser!!.uid).update("email", newEmail).await()
+            val user = auth.currentUser!!
+            val userId = user.uid
+
+            // 1. Actualizar en Firebase Authentication
+            user.updateEmail(newEmail).await()
+
+            // 2. Actualizar en Firestore
+            db.collection("users").document(userId).update("email", newEmail).await()
+            
             true
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error cambiando email: ${e.message}")

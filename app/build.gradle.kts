@@ -90,7 +90,10 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
-    implementation("com.google.firebase:firebase-messaging-ktx") // DEPENDENCIA AÑADIDA
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // Stripe (Pasarela de Pago)
+    implementation("com.stripe:stripe-android:20.39.0")
 
     // Corrutinas para Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

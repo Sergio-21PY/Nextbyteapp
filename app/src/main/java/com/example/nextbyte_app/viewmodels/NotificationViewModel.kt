@@ -4,16 +4,16 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextbyte_app.R
 import com.example.nextbyte_app.data.Notification
 import com.example.nextbyte_app.repository.FirebaseRepository
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class NotificationViewModel : ViewModel() {
@@ -26,7 +26,7 @@ class NotificationViewModel : ViewModel() {
     private val _sendState = MutableStateFlow<SendState>(SendState.Idle)
     val sendState: StateFlow<SendState> = _sendState
 
-    private var listenerStartTime: Timestamp? = null
+    private var hasListenerStarted = false
 
     sealed class SendState {
         object Idle : SendState()
@@ -35,18 +35,31 @@ class NotificationViewModel : ViewModel() {
         data class Error(val message: String) : SendState()
     }
 
+    // <<-- LÓGICA DE LISTENER COMPLETAMENTE RECONSTRUIDA Y ROBUSTA -->>
     fun listenForNotifications(context: Context) {
-        if (listenerStartTime != null) return
-
-        listenerStartTime = Timestamp.now()
+        // Nos aseguramos de que el listener solo se inicie una vez
+        if (hasListenerStarted) return
+        hasListenerStarted = true
 
         viewModelScope.launch {
-            repository.listenForNotifications().collectLatest { newNotifications ->
-                val latestNotification = newNotifications.firstOrNull()
-                if (latestNotification != null && latestNotification.createdAt.seconds > (listenerStartTime?.seconds ?: 0)) {
-                    showLocalNotification(context, latestNotification.title, latestNotification.message)
-                    listenerStartTime = latestNotification.createdAt
+            repository.listenForNotifications().collect { newNotifications ->
+                // Si es la primera vez que se carga la lista, solo la guardamos, no notificamos.
+                if (_notifications.value.isEmpty()) {
+                    _notifications.value = newNotifications
+                    return@collect
                 }
+
+                // Comparamos la nueva lista con la antigua para encontrar las notificaciones nuevas de verdad
+                val oldIds = _notifications.value.map { it.id }.toSet()
+                val trulyNewNotifications = newNotifications.filter { it.id !in oldIds }
+
+                // Para cada notificación realmente nueva, mostramos un aviso local
+                trulyNewNotifications.forEach { notification ->
+                    Log.d("NotificationVM", "Nueva notificación detectada: ${notification.title}")
+                    showLocalNotification(context, notification.title, notification.message)
+                }
+
+                // Actualizamos el estado con la lista más reciente
                 _notifications.value = newNotifications
             }
         }
@@ -57,7 +70,7 @@ class NotificationViewModel : ViewModel() {
             _sendState.value = SendState.Sending
             val notification = Notification(title = title, message = message)
             val success = repository.sendNotification(notification)
-            _sendState.value = if (success) SendState.Sent else SendState.Error("No se pudo enviar la notificación.")
+            _sendState.value = if (success) SendState.Sent else SendState.Error("No se pudo guardar la notificación.")
         }
     }
 
@@ -77,7 +90,7 @@ class NotificationViewModel : ViewModel() {
         }
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Asegúrate de tener este ícono
             .setContentTitle(title)
             .setContentText(message)
             .setAutoCancel(true)

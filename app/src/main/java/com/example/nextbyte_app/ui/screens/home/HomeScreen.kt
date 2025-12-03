@@ -47,14 +47,14 @@ fun HomeScreen(
     navController: NavController, 
     cartViewModel: CartViewModel,
     authViewModel: AuthViewModel,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
+    productViewModel: ProductViewModel // <<-- AHORA SE RECIBE, NO SE CREA
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val currentUserState = userViewModel.currentUser.collectAsState()
-    val currentUser = currentUserState.value
+    val currentUser by userViewModel.currentUser.collectAsState()
     val userName = currentUser?.name ?: "Usuario"
     val userRole = currentUser?.role?.let { getRoleDisplayName(it) } ?: "Cliente"
 
@@ -86,7 +86,8 @@ fun HomeScreen(
                 HomeContent(
                     navController = navController,
                     userName = userName,
-                    userRole = userRole
+                    userRole = userRole,
+                    productViewModel = productViewModel // Se pasa la instancia única
                 )
             }
 
@@ -121,7 +122,7 @@ fun HomeContent(
     navController: NavController,
     userName: String,
     userRole: String,
-    productViewModel: ProductViewModel = viewModel()
+    productViewModel: ProductViewModel // Se recibe la instancia única
 ) {
     val products by productViewModel.products.collectAsState()
     val featuredProducts = products.take(4)
@@ -137,7 +138,7 @@ fun HomeContent(
             SectionHeader(
                 title = "🔥 Productos Destacados",
                 subtitle = "Lo más vendido esta semana",
-                onSeeAllClick = { navController.navigate("productos") } // Navega a todos los productos
+                onSeeAllClick = { navController.navigate("productos") }
             )
         }
         item {
@@ -158,7 +159,7 @@ fun HomeContent(
             SectionHeader(
                 title = "⭐ Mejor Calificados",
                 subtitle = "Productos con mejores reseñas",
-                onSeeAllClick = { navController.navigate("productos") } // Navega a todos los productos
+                onSeeAllClick = { navController.navigate("productos") }
             )
         }
         item {
@@ -176,11 +177,14 @@ fun HomeContent(
             }
         }
         item { SectionHeader(title = "📱 Categorías", subtitle = "Explora por categoría") }
-        item { CategoriesRow(navController = navController) } // LLAMADA CORREGIDA
+        item { CategoriesRow(navController = navController) }
         item { AdminQuickAccess(navController = navController) }
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
+
+// ... (El resto de los composables de HomeContent permanecen igual)
+
 
 @Composable
 fun UserGreetingCard(userName: String, userRole: String) {
@@ -249,7 +253,7 @@ fun SpecialOfferCard(navController: NavController) {
                     Text("En smartphones seleccionados", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { navController.navigate("productos") }, // Navega a todos los productos
+                        onClick = { navController.navigate("productos") }, 
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF6A1B9A))
                     ) {
                         Text("Ver Ofertas", fontWeight = FontWeight.Bold)
@@ -330,7 +334,7 @@ fun RatedProductCard(product: Product, onProductClick: () -> Unit) {
     }
 }
 
-// <<-- CORRECCIÓN DEFINITIVA AQUÍ -->>
+
 @Composable
 fun CategoriesRow(navController: NavController) {
     val categories = listOf(
@@ -343,7 +347,6 @@ fun CategoriesRow(navController: NavController) {
     ) {
         items(categories) { (category, emoji) ->
             CategoryChip(category, emoji) {
-                // Navegamos a la ruta de productos, pasando la categoría como argumento
                 navController.navigate("productos?category=$category") 
             }
         }
@@ -404,3 +407,4 @@ private fun getRoleDisplayName(role: UserRole): String {
         UserRole.GUEST -> "Invitado"
     }
 }
+

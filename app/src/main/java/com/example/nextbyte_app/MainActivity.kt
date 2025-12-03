@@ -28,6 +28,7 @@ import com.example.nextbyte_app.ui.screens.account.ChangePasswordScreen
 import com.example.nextbyte_app.ui.screens.account.ChangePhoneNumberScreen
 import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
+import com.example.nextbyte_app.ui.screens.admin.CreateNotificationScreen
 import com.example.nextbyte_app.ui.screens.admin.ManageProductsScreen
 import com.example.nextbyte_app.ui.screens.admin.SalesStatsScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
@@ -38,7 +39,8 @@ import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
-import com.example.nextbyte_app.viewmodels.* 
+import com.example.nextbyte_app.viewmodels.*
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +55,12 @@ class MainActivity : ComponentActivity() {
                 val cartViewModel: CartViewModel = viewModel()
                 val productViewModel: ProductViewModel = viewModel()
                 val statsViewModel: StatsViewModel = viewModel()
+                val notificationViewModel: NotificationViewModel = viewModel()
                 val checkoutViewModel: CheckoutViewModel = viewModel()
+
+                LaunchedEffect(Unit) {
+                    FirebaseMessaging.getInstance().subscribeToTopic("all_users")
+                }
 
                 val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
@@ -87,7 +94,7 @@ class MainActivity : ComponentActivity() {
                             composable("welcome") { WelcomeScreen({ navController.navigate("login") }, { navController.navigate("register") }) }
                             composable("register") { RegisterScreen({ navController.popBackStack() }, { navController.navigate("home") { popUpTo("register") { inclusive = true } } }) }
                             composable("login") { LoginScreen({ navController.navigate("home") { popUpTo("login") { inclusive = true } } }, { navController.navigate("register") }) }
-                            composable("home") { HomeScreen(navController, cartViewModel, authViewModel, userViewModel) }
+                            composable("home") { HomeScreen(navController, cartViewModel, authViewModel, userViewModel, productViewModel) } 
                             
                             composable(
                                 route = "productos?category={category}",
@@ -128,7 +135,8 @@ class MainActivity : ComponentActivity() {
                                 ProductDetailScreen(
                                     navController = navController,
                                     productId = backStackEntry.arguments?.getString("productId")!!,
-                                    cartViewModel = cartViewModel
+                                    cartViewModel = cartViewModel,
+                                    productViewModel = productViewModel
                                 )
                             }
 
@@ -136,6 +144,7 @@ class MainActivity : ComponentActivity() {
                             composable("manage_products") { ManageProductsScreen(navController = navController, productViewModel = productViewModel) }
                             composable("admin_panel") { AdminPanelScreen(navController = navController, userViewModel = userViewModel) }
                             composable("statistics") { SalesStatsScreen(navController = navController, statsViewModel = statsViewModel) }
+                            composable("create_notification") { CreateNotificationScreen(navController = navController, notificationViewModel = notificationViewModel) }
 
                             // --- Rutas de Checkout ---
                             composable("checkout") { CheckoutScreen(navController, cartViewModel, userViewModel, checkoutViewModel) }
@@ -149,6 +158,9 @@ class MainActivity : ComponentActivity() {
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                             composable("notifications") { NotificationsScreen(navController = navController) }
+                            composable("help") { HelpScreen(navController = navController) }
+                            composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
+                            composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
                         }
                     }
                 }

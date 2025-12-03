@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.nextbyte_app.data.Notification
 import com.example.nextbyte_app.data.Order
 import com.example.nextbyte_app.data.Product
+import com.example.nextbyte_app.data.Review
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
 import com.google.firebase.auth.EmailAuthProvider
@@ -77,6 +78,17 @@ class FirebaseRepository {
             false
         }
     }
+    
+    // <<-- NUEVA FUNCIÓN PARA ACTUALIZAR EL RATING PROMEDIO -->>
+    suspend fun updateProductAverageRating(productId: String) {
+        try {
+            val reviews = getReviewsForProduct(productId)
+            val averageRating = if (reviews.isNotEmpty()) reviews.map { it.rating }.average() else 0.0
+            db.collection("products").document(productId).update("rating", averageRating).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error actualizando el rating promedio: ${e.message}")
+        }
+    }
 
     suspend fun deleteProduct(productId: String): Boolean {
         return try {
@@ -110,6 +122,30 @@ class FirebaseRepository {
         }
     }
 
+    // ========== FUNCIONES DE RESEÑAS ==========
+    suspend fun addReview(productId: String, review: Review): Boolean {
+        return try {
+            db.collection("products").document(productId).collection("reviews").add(review).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error añadiendo reseña: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun getReviewsForProduct(productId: String): List<Review> {
+        return try {
+            val snapshot = db.collection("products").document(productId)
+                .collection("reviews")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get().await()
+            snapshot.toObjects(Review::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error obteniendo reseñas: ${e.message}")
+            emptyList()
+        }
+    }
+
     // ========== FUNCIONES DE ÓRDENES ==========
     suspend fun getAllOrders(): List<Order> {
         return try {
@@ -129,7 +165,7 @@ class FirebaseRepository {
             false
         }
     }
-
+    
     // ========== FUNCIONES DE NOTIFICACIONES ==========
     suspend fun sendNotification(notification: Notification): Boolean {
         return try {

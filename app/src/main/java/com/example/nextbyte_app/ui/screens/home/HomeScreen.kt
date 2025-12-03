@@ -93,7 +93,8 @@ fun HomeScreen(
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
                     navController = navController,
-                    cartViewModel = cartViewModel
+                    cartViewModel = cartViewModel,
+                    userViewModel = userViewModel
                 )
             }
 
@@ -136,7 +137,7 @@ fun HomeContent(
             SectionHeader(
                 title = "🔥 Productos Destacados",
                 subtitle = "Lo más vendido esta semana",
-                onSeeAllClick = { navController.navigate(AppDestinations.Productos.route) }
+                onSeeAllClick = { navController.navigate("productos") } // Navega a todos los productos
             )
         }
         item {
@@ -157,7 +158,7 @@ fun HomeContent(
             SectionHeader(
                 title = "⭐ Mejor Calificados",
                 subtitle = "Productos con mejores reseñas",
-                onSeeAllClick = { navController.navigate(AppDestinations.Productos.route) }
+                onSeeAllClick = { navController.navigate("productos") } // Navega a todos los productos
             )
         }
         item {
@@ -175,7 +176,7 @@ fun HomeContent(
             }
         }
         item { SectionHeader(title = "📱 Categorías", subtitle = "Explora por categoría") }
-        item { CategoriesRow(navController = navController) }
+        item { CategoriesRow(navController = navController) } // LLAMADA CORREGIDA
         item { AdminQuickAccess(navController = navController) }
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
@@ -248,7 +249,7 @@ fun SpecialOfferCard(navController: NavController) {
                     Text("En smartphones seleccionados", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { navController.navigate(AppDestinations.Productos.route) },
+                        onClick = { navController.navigate("productos") }, // Navega a todos los productos
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF6A1B9A))
                     ) {
                         Text("Ver Ofertas", fontWeight = FontWeight.Bold)
@@ -329,6 +330,7 @@ fun RatedProductCard(product: Product, onProductClick: () -> Unit) {
     }
 }
 
+// <<-- CORRECCIÓN DEFINITIVA AQUÍ -->>
 @Composable
 fun CategoriesRow(navController: NavController) {
     val categories = listOf(
@@ -340,7 +342,10 @@ fun CategoriesRow(navController: NavController) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         items(categories) { (category, emoji) ->
-            CategoryChip(category, emoji) { navController.navigate(AppDestinations.Productos.route) }
+            CategoryChip(category, emoji) {
+                // Navegamos a la ruta de productos, pasando la categoría como argumento
+                navController.navigate("productos?category=$category") 
+            }
         }
     }
 }

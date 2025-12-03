@@ -89,7 +89,22 @@ class MainActivity : ComponentActivity() {
                             composable("register") { RegisterScreen({ navController.popBackStack() }, { navController.navigate("home") { popUpTo("register") { inclusive = true } } }) }
                             composable("login") { LoginScreen({ navController.navigate("home") { popUpTo("login") { inclusive = true } } }, { navController.navigate("register") }) }
                             composable("home") { HomeScreen(navController, cartViewModel, authViewModel, userViewModel) }
-                            composable("productos") { ProductosScreen(navController, cartViewModel) }
+                            
+                            composable(
+                                route = "productos?category={category}",
+                                arguments = listOf(navArgument("category") { 
+                                    type = NavType.StringType
+                                    nullable = true
+                                })
+                            ) { backStackEntry ->
+                                ProductosScreen(
+                                    navController = navController,
+                                    cartViewModel = cartViewModel,
+                                    userViewModel = userViewModel, // ViewModel AÑADIDO
+                                    category = backStackEntry.arguments?.getString("category")
+                                )
+                            }
+
                             composable("carrito") { CarritoScreen(navController, cartViewModel) }
                             composable("favorites") { FavoritosScreen(navController, cartViewModel) }
                             

@@ -7,13 +7,18 @@ import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
     private val repository = FirebaseRepository()
 
+    // Lista privada que siempre contiene TODOS los productos.
+    private var allProducts: List<Product> = emptyList()
+
+    // StateFlow que la UI observa. Contendrá la lista filtrada o la completa.
     private val _products = MutableStateFlow<List<Product>>(emptyList())
-    val products: StateFlow<List<Product>> = _products
+    val products: StateFlow<List<Product>> = _products.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -40,12 +45,22 @@ class ProductViewModel : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                _products.value = repository.getAllProducts()
+                allProducts = repository.getAllProducts()
+                _products.value = allProducts // Inicialmente, mostrar todos
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    // <<-- NUEVA FUNCIÓN DE FILTRADO -->>
+    fun filterByCategory(category: String) {
+        if (category.equals("Todos", ignoreCase = true)) {
+            _products.value = allProducts
+        } else {
+            _products.value = allProducts.filter { it.category.equals(category, ignoreCase = true) }
         }
     }
 

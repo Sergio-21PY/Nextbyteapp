@@ -16,34 +16,52 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.ui.shared.ProductCard
 import com.example.nextbyte_app.viewmodels.CartProduct
 import com.example.nextbyte_app.viewmodels.CartViewModel
 import com.example.nextbyte_app.viewmodels.ProductViewModel
+import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductosScreen(
     navController: NavController,
-    cartViewModel: CartViewModel // <-- Recibido como parámetro
+    cartViewModel: CartViewModel,
+    userViewModel: UserViewModel,
+    category: String? = null // Argumento de categoría opcional
 ) {
     val context = LocalContext.current
     val productViewModel: ProductViewModel = viewModel()
     val products by productViewModel.products.collectAsState()
     val isLoading by productViewModel.isLoading.collectAsState()
+    val currentUser by userViewModel.currentUser.collectAsState()
 
-    LaunchedEffect(Unit) {
-        productViewModel.loadProducts()
+    // <<-- LÓGICA DE FILTRADO CORREGIDA Y ROBUSTA -->>
+    LaunchedEffect(isLoading, category) {
+        // Solo aplicamos el filtro DESPUÉS de que la carga inicial haya terminado.
+        if (!isLoading && category != null) {
+            productViewModel.filterByCategory(category)
+        }
+    }
+
+    // Limpiar el filtro cuando la pantalla se destruye para no afectar la próxima visita
+    DisposableEffect(Unit) {
+        onDispose {
+            productViewModel.filterByCategory("Todos")
+        }
     }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("add_product") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar producto")
+            if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
+                FloatingActionButton(
+                    onClick = { navController.navigate("add_product") },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar producto")
+                }
             }
         }
     ) { paddingValues ->
@@ -64,7 +82,7 @@ fun ProductosScreen(
                 item {
                     Column {
                         Text(
-                            text = "🛍️ TODOS LOS PRODUCTOS",
+                            text = "🛍️ ${category?.uppercase() ?: "TODOS LOS PRODUCTOS"}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 16.dp)
@@ -90,8 +108,7 @@ fun ProductosScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Text("📦 No hay productos", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("Usa el botón + para agregar el primer producto", fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
+                                Text("📦 No hay productos en esta categoría", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -99,7 +116,7 @@ fun ProductosScreen(
                     items(products) { product ->
                         ProductCard(
                             product = product,
-                            onProductClick = { navController.navigate("product_detail/${product.id}") }, // <-- NAVEGACIÓN AÑADIDA
+                            onProductClick = { navController.navigate("product_detail/${product.id}") }, 
                             onAddToCartClick = {
                                 val cartProduct = CartProduct(
                                     id = product.id,

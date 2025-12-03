@@ -48,6 +48,24 @@ class ProductViewModel : ViewModel() {
         }
     }
 
+    fun updateProduct(product: Product) {
+        viewModelScope.launch {
+            val success = repository.updateProduct(product)
+            if (success) {
+                loadProducts()
+            }
+        }
+    }
+
+    fun deleteProduct(productId: String) {
+        viewModelScope.launch {
+            val success = repository.deleteProduct(productId)
+            if (success) {
+                loadProducts()
+            }
+        }
+    }
+
     fun loadCategories() {
         viewModelScope.launch {
             try {

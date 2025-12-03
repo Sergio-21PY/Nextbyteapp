@@ -14,18 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +30,7 @@ import com.example.nextbyte_app.viewmodels.UserViewModel
 fun AdminPanelScreen(navController: NavController, userViewModel: UserViewModel = viewModel()) {
     val users by userViewModel.allUsers.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
+    var showRoleChangeDialog by remember { mutableStateOf<Pair<User, UserRole>?>(null) }
 
     LaunchedEffect(Unit) {
         userViewModel.loadAllUsers()
@@ -49,7 +39,7 @@ fun AdminPanelScreen(navController: NavController, userViewModel: UserViewModel 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Panel de Administrador") },
+                title = { Text("Gestionar Usuarios") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -69,11 +59,23 @@ fun AdminPanelScreen(navController: NavController, userViewModel: UserViewModel 
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(users) { user ->
-                    UserManagementCard(user = user, onRoleChange = {
-                        userViewModel.updateUserRole(user.uid, it)
+                    UserManagementCard(user = user, onRoleChange = { newRole ->
+                        showRoleChangeDialog = Pair(user, newRole)
                     })
                 }
             }
+        }
+
+        showRoleChangeDialog?.let { (user, newRole) ->
+            RoleChangeConfirmationDialog(
+                userName = user.name,
+                newRole = newRole.name,
+                onConfirm = {
+                    userViewModel.updateUserRole(user.uid, newRole)
+                    showRoleChangeDialog = null
+                },
+                onDismiss = { showRoleChangeDialog = null }
+            )
         }
     }
 }
@@ -104,4 +106,23 @@ fun UserManagementCard(user: User, onRoleChange: (UserRole) -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun RoleChangeConfirmationDialog(userName: String, newRole: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirmar Cambio de Rol") },
+        text = { Text("¿Estás seguro de que quieres cambiar el rol de '$userName' a '$newRole'?") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

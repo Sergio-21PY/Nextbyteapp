@@ -1,5 +1,6 @@
 package com.example.nextbyte_app.repository
 
+import com.example.nextbyte_app.data.Order
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
@@ -7,7 +8,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 import android.util.Log
 
@@ -39,12 +39,42 @@ class FirebaseRepository {
         }
     }
 
+    suspend fun updateProduct(product: Product): Boolean {
+        return try {
+            db.collection("products").document(product.id).set(product).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error actualizando producto: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun deleteProduct(productId: String): Boolean {
+        return try {
+            db.collection("products").document(productId).delete().await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error eliminando producto: ${e.message}")
+            false
+        }
+    }
+
     suspend fun getCategories(): List<String> {
         return try {
             val snapshot = db.collection("categories").get().await()
             snapshot.documents.map { it.id }
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error obteniendo categorías: ${e.message}")
+            emptyList()
+        }
+    }
+
+    // ========== FUNCIONES DE ÓRDENES ==========
+    suspend fun getAllOrders(): List<Order> {
+        return try {
+            db.collection("orders").get().await().toObjects(Order::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error obteniendo órdenes: ${e.message}")
             emptyList()
         }
     }
@@ -74,14 +104,11 @@ class FirebaseRepository {
         }
     }
 
-    fun getCurrentUser() = auth.currentUser
-
     fun logout() {
         auth.signOut()
         Log.d("FirebaseRepository", "Usuario cerró sesión")
     }
 
-    fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
     suspend fun reauthenticateUser(password: String): Boolean {
         return try {
@@ -95,23 +122,6 @@ class FirebaseRepository {
         }
     }
 
-    suspend fun changeUserEmail(newEmail: String): Boolean {
-        return try {
-            val user = auth.currentUser!!
-            val userId = user.uid
-
-            // 1. Actualizar en Firebase Authentication
-            user.updateEmail(newEmail).await()
-
-            // 2. Actualizar en Firestore
-            db.collection("users").document(userId).update("email", newEmail).await()
-            
-            true
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error cambiando email: ${e.message}")
-            false
-        }
-    }
 
     suspend fun changeUserPassword(newPassword: String): Boolean {
         return try {

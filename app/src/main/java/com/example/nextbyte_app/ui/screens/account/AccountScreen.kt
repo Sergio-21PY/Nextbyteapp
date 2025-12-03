@@ -70,14 +70,12 @@ fun AccountScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // LA CORRECCIÓN ESTÁ AQUÍ:
             LogoutButton {
-                authViewModel.logout() // Solo iniciamos el logout
-                // La navegación y la limpieza de datos se manejan centralmente
+                authViewModel.logout()
             }
         } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No se pudo cargar la información del usuario.")
+             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
     }
@@ -107,7 +105,7 @@ fun UserDashboard(onNavigate: (String) -> Unit) {
 @Composable
 fun AdminDashboard(onNavigate: (String) -> Unit) {
     val adminItems = listOf(
-        SettingItem("Gestionar Productos", Icons.Default.Category, "productos"),
+        SettingItem("Gestionar Productos", Icons.Default.Category, "manage_products"), // RUTA CORREGIDA
         SettingItem("Gestionar Usuarios", Icons.Default.Group, "admin_panel"),
         SettingItem("Estadísticas de Ventas", Icons.Default.BarChart, "statistics")
     )

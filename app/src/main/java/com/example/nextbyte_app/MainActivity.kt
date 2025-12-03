@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
@@ -25,6 +27,8 @@ import com.example.nextbyte_app.ui.screens.account.ChangePasswordScreen
 import com.example.nextbyte_app.ui.screens.account.ChangePhoneNumberScreen
 import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
+import com.example.nextbyte_app.ui.screens.admin.ManageProductsScreen
+import com.example.nextbyte_app.ui.screens.admin.SalesStatsScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
@@ -50,24 +54,18 @@ class MainActivity : ComponentActivity() {
                 val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
 
-                // << LA LÓGICA DE GESTIÓN DE SESIÓN DEFINITIVA ESTÁ AQUÍ >>
                 LaunchedEffect(authState) {
                     val firebaseUser = authState
                     if (firebaseUser != null) {
-                        // Si hay un usuario y no es el que ya tenemos cargado, recargamos
                         if (userViewModel.currentUser.value?.uid != firebaseUser.uid) {
-                            userViewModel.clearUser() // Limpiamos CUALQUIER dato de un usuario anterior
+                            userViewModel.clearUser()
                             userViewModel.loadCurrentUser(firebaseUser.uid)
                         }
                     } else {
-                        // Si no hay usuario (logout), navegamos PRIMERO
+                        userViewModel.clearUser()
                         navController.navigate("welcome") {
-                            // Limpiamos todo el historial de navegación para que no se pueda volver atrás
                             popUpTo(navController.graph.id) { inclusive = true }
                         }
-                        // Y DESPUÉS limpiamos los datos para no causar errores en la UI
-                        userViewModel.clearUser()
-                        // cartViewModel.clearCart() // Buena práctica: limpiar el carrito también
                     }
                 }
 
@@ -82,7 +80,6 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = startDestination
                         ) {
-
                             composable("welcome") { WelcomeScreen({ navController.navigate("login") }, { navController.navigate("register") }) }
                             composable("register") { RegisterScreen({ navController.popBackStack() }, { navController.navigate("home") { popUpTo("register") { inclusive = true } } }) }
                             composable("login") { LoginScreen({ navController.navigate("home") { popUpTo("login") { inclusive = true } } }, { navController.navigate("register") }) }
@@ -90,9 +87,26 @@ class MainActivity : ComponentActivity() {
                             composable("productos") { ProductosScreen(navController, cartViewModel) }
                             composable("carrito") { CarritoScreen(navController, cartViewModel) }
                             composable("favorites") { FavoritosScreen(navController, cartViewModel) }
-                            composable("add_product") { AddProductScreen(navController) }
+                            
+                            composable(
+                                route = "add_product?productId={productId}",
+                                arguments = listOf(navArgument("productId") { 
+                                    type = NavType.StringType
+                                    nullable = true 
+                                })
+                            ) { backStackEntry ->
+                                AddProductScreen(
+                                    navController = navController,
+                                    productId = backStackEntry.arguments?.getString("productId")
+                                )
+                            }
 
-                            // --- Rutas de Ajustes y Cuenta (CORREGIDO) ---
+                            // --- Rutas de Admin ---
+                            composable("manage_products") { ManageProductsScreen(navController = navController) }
+                            composable("admin_panel") { AdminPanelScreen(navController = navController) }
+                            composable("statistics") { SalesStatsScreen(navController = navController) } // RUTA CORREGIDA
+
+                            // --- Rutas de Cuenta y Ajustes ---
                             composable("settings") { SettingsScreen(navController = navController) }
                             composable("change_phone") { ChangePhoneNumberScreen(navController = navController, userViewModel = userViewModel) }
                             composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }
@@ -103,7 +117,6 @@ class MainActivity : ComponentActivity() {
                             composable("help") { HelpScreen(navController = navController) }
                             composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                             composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
-                            composable("admin_panel") { AdminPanelScreen(navController = navController) }
                         }
                     }
                 }

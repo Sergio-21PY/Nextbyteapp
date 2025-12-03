@@ -40,7 +40,8 @@ class CartViewModel : ViewModel() {
     private val validDiscountCodes = mapOf(
         "PROMO10" to 10,
         "NEXTBYTE20" to 20,
-        "DESCUENTO5" to 5
+        "DESCUENTO5" to 5,
+        "PROMO20" to 20 // CÓDIGO AÑADIDO
     )
 
     fun addItem(product: CartProduct) {

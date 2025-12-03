@@ -4,26 +4,37 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextbyte_app.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel robusto para gestionar la autenticación.
+ * Combina un listener en tiempo real para el estado de la sesión con la lógica 
+ * para ejecutar acciones como cambiar la contraseña.
+ */
 class AuthViewModel : ViewModel() {
-    private val auth: FirebaseAuth = Firebase.auth
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val repository = FirebaseRepository()
 
-    private val _isUserLoggedIn = MutableStateFlow(auth.currentUser != null)
-    val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
+    // --- LA ÚNICA FUENTE DE VERDAD PARA EL ESTADO DE SESIÓN ---
+    val authState: StateFlow<FirebaseUser?> = callbackFlow {
+        val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            trySend(firebaseAuth.currentUser).isSuccess
+        }
+        auth.addAuthStateListener(authStateListener)
+        awaitClose { auth.removeAuthStateListener(authStateListener) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), auth.currentUser)
 
-    private val _isLoading = MutableStateFlow(true)
+    // --- ESTADOS PARA LA UI (feedback de operaciones) ---
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _currentUser = MutableStateFlow(auth.currentUser)
-    val currentUser: StateFlow<com.google.firebase.auth.FirebaseUser?> = _currentUser
-
-    // Para comunicar resultados a la UI
     private val _updateResult = MutableStateFlow<UpdateResult?>(null)
     val updateResult: StateFlow<UpdateResult?> = _updateResult
 
@@ -32,39 +43,10 @@ class AuthViewModel : ViewModel() {
         data class Error(val message: String) : UpdateResult()
     }
 
-    init {
-        checkCurrentUser()
-    }
-
-    private fun checkCurrentUser() {
-        _isLoading.value = true
-        _currentUser.value = auth.currentUser
-        _isUserLoggedIn.value = auth.currentUser != null
-        _isLoading.value = false
-    }
+    // --- ACCIONES DEL USUARIO ---
 
     fun logout() {
         auth.signOut()
-        _currentUser.value = null
-        _isUserLoggedIn.value = false
-    }
-
-    fun changeEmail(password: String, newEmail: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            val reauthSuccess = repository.reauthenticateUser(password)
-            if (reauthSuccess) {
-                val changeSuccess = repository.changeUserEmail(newEmail)
-                if (changeSuccess) {
-                    _updateResult.value = UpdateResult.Success
-                } else {
-                    _updateResult.value = UpdateResult.Error("No se pudo cambiar el correo en la base de datos.")
-                }
-            } else {
-                _updateResult.value = UpdateResult.Error("La contraseña es incorrecta.")
-            }
-            _isLoading.value = false
-        }
     }
 
     fun changePassword(currentPassword: String, newPassword: String) {
@@ -89,11 +71,7 @@ class AuthViewModel : ViewModel() {
         _updateResult.value = null
     }
 
-    fun getCurrentUserEmail(): String {
-        return auth.currentUser?.email ?: ""
-    }
-
     fun getCurrentUserId(): String {
-        return auth.currentUser?.uid ?: ""
+        return authState.value?.uid ?: ""
     }
 }

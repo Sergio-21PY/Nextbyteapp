@@ -47,8 +47,7 @@ class MainActivity : ComponentActivity() {
                 val userViewModel: UserViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
 
-                val authState by authViewModel.currentUser.collectAsState()
-                // Usamos el isLoading del AuthViewModel para el estado de carga general de la app
+                val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
 
                 // << LA LÓGICA DE GESTIÓN DE SESIÓN DEFINITIVA ESTÁ AQUÍ >>
@@ -61,18 +60,18 @@ class MainActivity : ComponentActivity() {
                             userViewModel.loadCurrentUser(firebaseUser.uid)
                         }
                     } else {
-                        // Si no hay usuario (logout), limpiamos todo y vamos a la bienvenida
-                        userViewModel.clearUser()
-                        // cartViewModel.clearCart() // Buena práctica: limpiar carrito también
+                        // Si no hay usuario (logout), navegamos PRIMERO
                         navController.navigate("welcome") {
-                            // Limpiamos todo el historial de navegación para que el usuario no pueda volver atrás
+                            // Limpiamos todo el historial de navegación para que no se pueda volver atrás
                             popUpTo(navController.graph.id) { inclusive = true }
                         }
+                        // Y DESPUÉS limpiamos los datos para no causar errores en la UI
+                        userViewModel.clearUser()
+                        // cartViewModel.clearCart() // Buena práctica: limpiar el carrito también
                     }
                 }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    // La pantalla de carga se muestra solo mientras se resuelve la autenticación inicial
                     val showLoadingScreen = isLoading && authState == null
                     
                     if (showLoadingScreen) {
@@ -93,7 +92,7 @@ class MainActivity : ComponentActivity() {
                             composable("favorites") { FavoritosScreen(navController, cartViewModel) }
                             composable("add_product") { AddProductScreen(navController) }
 
-                            // --- Rutas de Ajustes y Cuenta ---
+                            // --- Rutas de Ajustes y Cuenta (CORREGIDO) ---
                             composable("settings") { SettingsScreen(navController = navController) }
                             composable("change_phone") { ChangePhoneNumberScreen(navController = navController, userViewModel = userViewModel) }
                             composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }

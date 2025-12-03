@@ -42,6 +42,7 @@ class StatsViewModel : ViewModel() {
                 val productsJob = launch {
                     val products = repository.getAllProducts()
                     _totalProducts.value = products.size
+                    // CORRECCIÓN: Convertimos el precio a Double para la operación
                     _inventoryValue.value = products.sumOf { it.price.toDouble() * it.stock }
                 }
                 val ordersJob = launch {

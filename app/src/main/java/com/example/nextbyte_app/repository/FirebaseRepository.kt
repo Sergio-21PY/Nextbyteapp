@@ -1,25 +1,52 @@
 package com.example.nextbyte_app.repository
 
+import android.net.Uri
 import com.example.nextbyte_app.data.Order
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import android.util.Log
+import java.util.UUID
 
 class FirebaseRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     // ========== FUNCIONES DE PRODUCTOS ==========
 
+    // << LA FUNCIÓN DEFINITIVA Y A PRUEBA DE CRASHES >>
     suspend fun getAllProducts(): List<Product> {
         return try {
-            db.collection("products").get().await().toObjects(Product::class.java)
+            val snapshot = db.collection("products").get().await()
+            // Mapeo manual para evitar crashes por tipos de datos inconsistentes
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    Product(
+                        id = doc.id,
+                        name = doc.getString("name") ?: "",
+                        description = doc.getString("description") ?: "",
+                        code = doc.getString("code") ?: "",
+                        // Lógica robusta para leer el precio como Int o Double
+                        price = doc.getDouble("price") ?: (doc.getLong("price")?.toDouble() ?: 0.0),
+                        cost = doc.getDouble("cost") ?: (doc.getLong("cost")?.toDouble() ?: 0.0),
+                        imageUrl = doc.getString("imageUrl") ?: "",
+                        category = doc.getString("category") ?: "",
+                        stock = doc.getLong("stock")?.toInt() ?: 0,
+                        rating = doc.getDouble("rating") ?: 0.0,
+                        isFavorited = doc.getBoolean("isFavorited") ?: false
+                    )
+                } catch (e: Exception) {
+                    Log.e("FirebaseRepository", "Error parseando producto ${doc.id}: ${e.message}")
+                    null // Ignora el producto corrupto en lugar de crashear
+                }
+            }
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error obteniendo productos: ${e.message}")
             emptyList()
@@ -56,6 +83,18 @@ class FirebaseRepository {
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error eliminando producto: ${e.message}")
             false
+        }
+    }
+    
+    suspend fun uploadImage(imageUri: Uri): String {
+        return try {
+            val storageRef = storage.reference
+            val imageRef = storageRef.child("product_images/${UUID.randomUUID()}")
+            imageRef.putFile(imageUri).await()
+            imageRef.downloadUrl.await().toString()
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error subiendo imagen: ${e.message}")
+            ""
         }
     }
 
@@ -106,9 +145,7 @@ class FirebaseRepository {
 
     fun logout() {
         auth.signOut()
-        Log.d("FirebaseRepository", "Usuario cerró sesión")
     }
-
 
     suspend fun reauthenticateUser(password: String): Boolean {
         return try {

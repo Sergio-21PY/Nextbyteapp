@@ -37,6 +37,8 @@ import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
 import com.example.nextbyte_app.viewmodels.AuthViewModel
 import com.example.nextbyte_app.viewmodels.CartViewModel
+import com.example.nextbyte_app.viewmodels.ProductViewModel
+import com.example.nextbyte_app.viewmodels.StatsViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
 
 class MainActivity : ComponentActivity() {
@@ -47,9 +49,12 @@ class MainActivity : ComponentActivity() {
             NextbyteappTheme {
 
                 val navController = rememberNavController()
+                // Inicialización de todos los ViewModels
                 val authViewModel: AuthViewModel = viewModel()
                 val userViewModel: UserViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
+                val productViewModel: ProductViewModel = viewModel()
+                val statsViewModel: StatsViewModel = viewModel()
 
                 val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
@@ -97,14 +102,15 @@ class MainActivity : ComponentActivity() {
                             ) { backStackEntry ->
                                 AddProductScreen(
                                     navController = navController,
-                                    productId = backStackEntry.arguments?.getString("productId")
+                                    productId = backStackEntry.arguments?.getString("productId"),
+                                    productViewModel = productViewModel // Pasamos el ViewModel
                                 )
                             }
 
-                            // --- Rutas de Admin ---
-                            composable("manage_products") { ManageProductsScreen(navController = navController) }
-                            composable("admin_panel") { AdminPanelScreen(navController = navController) }
-                            composable("statistics") { SalesStatsScreen(navController = navController) } // RUTA CORREGIDA
+                            // --- Rutas de Admin (CORREGIDAS) ---
+                            composable("manage_products") { ManageProductsScreen(navController = navController, productViewModel = productViewModel) }
+                            composable("admin_panel") { AdminPanelScreen(navController = navController, userViewModel = userViewModel) }
+                            composable("statistics") { SalesStatsScreen(navController = navController, statsViewModel = statsViewModel) }
 
                             // --- Rutas de Cuenta y Ajustes ---
                             composable("settings") { SettingsScreen(navController = navController) }

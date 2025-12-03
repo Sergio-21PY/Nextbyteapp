@@ -1,5 +1,6 @@
 package com.example.nextbyte_app.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextbyte_app.data.Product
@@ -66,6 +67,23 @@ class ProductViewModel : ViewModel() {
         }
     }
 
+    fun uploadProductImage(imageUri: Uri, product: Product, isEditMode: Boolean) {
+        _uploadState.value = UploadState.Loading
+        viewModelScope.launch {
+            val imageUrl = repository.uploadImage(imageUri)
+            if (imageUrl.isNotEmpty()) {
+                val newProduct = product.copy(imageUrl = imageUrl)
+                if (isEditMode) {
+                    updateProduct(newProduct)
+                } else {
+                    addProduct(newProduct)
+                }
+            } else {
+                _uploadState.value = UploadState.Error("No se pudo subir la imagen.")
+            }
+        }
+    }
+
     fun loadCategories() {
         viewModelScope.launch {
             try {
@@ -84,8 +102,6 @@ class ProductViewModel : ViewModel() {
             try {
                 val productId = repository.addProduct(product)
                 _uploadState.value = UploadState.Success(productId)
-
-                // IMPORTANTE: Recargar productos después de agregar
                 loadProducts()
 
             } catch (e: Exception) {
@@ -99,7 +115,6 @@ class ProductViewModel : ViewModel() {
         _uploadState.value = UploadState.Idle
     }
 
-    // Función para forzar la actualización de productos
     fun refreshProducts() {
         loadProducts()
     }

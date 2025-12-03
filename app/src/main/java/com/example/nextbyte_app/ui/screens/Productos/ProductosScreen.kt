@@ -99,12 +99,12 @@ fun ProductosScreen(
                     items(products) { product ->
                         ProductCard(
                             product = product,
-                            onProductClick = {},
+                            onProductClick = { navController.navigate("product_detail/${product.id}") }, // <-- NAVEGACIÓN AÑADIDA
                             onAddToCartClick = {
                                 val cartProduct = CartProduct(
                                     id = product.id,
                                     name = product.name,
-                                    price = product.price, // CORREGIDO: El precio ya es Double
+                                    price = product.price,
                                     imageUrl = product.imageUrl
                                 )
                                 cartViewModel.addItem(cartProduct)

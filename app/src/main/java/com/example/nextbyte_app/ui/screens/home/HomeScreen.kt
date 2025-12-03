@@ -44,7 +44,7 @@ import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController, // El NavController principal
+    navController: NavController, 
     cartViewModel: CartViewModel,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel
@@ -70,7 +70,7 @@ fun HomeScreen(
         topBar = {
             MainTopBar(
                 title = title,
-                onSettingsClick = { navController.navigate("settings") } // Usa el principal
+                onSettingsClick = { navController.navigate("settings") }
             )
         },
         bottomBar = {
@@ -84,7 +84,7 @@ fun HomeScreen(
         ) {
             composable(AppDestinations.Home.route) {
                 HomeContent(
-                    navController = navController, // Pasa el principal
+                    navController = navController,
                     userName = userName,
                     userRole = userRole
                 )
@@ -92,14 +92,14 @@ fun HomeScreen(
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
-                    navController = navController, // Pasa el principal
+                    navController = navController,
                     cartViewModel = cartViewModel
                 )
             }
 
             composable(AppDestinations.Cart.route) {
                 CarritoScreen(
-                    navController = navController, // Pasa el principal
+                    navController = navController,
                     cartViewModel = cartViewModel
                 )
             }
@@ -114,8 +114,6 @@ fun HomeScreen(
         }
     }
 }
-
-// El resto del archivo permanece igual...
 
 @Composable
 fun HomeContent(
@@ -150,7 +148,7 @@ fun HomeContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     items(featuredProducts) { product ->
-                        FeaturedProductCard(product = product, onProductClick = {})
+                        FeaturedProductCard(product = product, onProductClick = { navController.navigate("product_detail/${product.id}") })
                     }
                 }
             }
@@ -171,7 +169,7 @@ fun HomeContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     items(bestSellers) { product ->
-                        RatedProductCard(product = product, onProductClick = {})
+                        RatedProductCard(product = product, onProductClick = { navController.navigate("product_detail/${product.id}") })
                     }
                 }
             }

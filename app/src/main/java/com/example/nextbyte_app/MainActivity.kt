@@ -1,13 +1,9 @@
 package com.example.nextbyte_app
 
-import android.Manifest
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -26,13 +21,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen
+import com.example.nextbyte_app.ui.screens.Productos.ProductDetailScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
 import com.example.nextbyte_app.ui.screens.account.ChangePasswordScreen
 import com.example.nextbyte_app.ui.screens.account.ChangePhoneNumberScreen
 import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
-import com.example.nextbyte_app.ui.screens.admin.CreateNotificationScreen
 import com.example.nextbyte_app.ui.screens.admin.ManageProductsScreen
 import com.example.nextbyte_app.ui.screens.admin.SalesStatsScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
@@ -43,7 +38,6 @@ import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
 import com.example.nextbyte_app.viewmodels.AuthViewModel
 import com.example.nextbyte_app.viewmodels.CartViewModel
-import com.example.nextbyte_app.viewmodels.NotificationViewModel
 import com.example.nextbyte_app.viewmodels.ProductViewModel
 import com.example.nextbyte_app.viewmodels.StatsViewModel
 import com.example.nextbyte_app.viewmodels.UserViewModel
@@ -54,18 +48,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NextbyteappTheme {
-                val context = LocalContext.current
-                val requestPermissionLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) { isGranted: Boolean ->
-                    // Aquí puedes manejar si el permiso fue concedido o no
-                }
-
-                LaunchedEffect(Unit) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
 
                 val navController = rememberNavController()
                 val authViewModel: AuthViewModel = viewModel()
@@ -73,12 +55,6 @@ class MainActivity : ComponentActivity() {
                 val cartViewModel: CartViewModel = viewModel()
                 val productViewModel: ProductViewModel = viewModel()
                 val statsViewModel: StatsViewModel = viewModel()
-                val notificationViewModel: NotificationViewModel = viewModel()
-
-                // <<-- INICIAMOS EL LISTENER DE NOTIFICACIONES -->>
-                LaunchedEffect(Unit) {
-                    notificationViewModel.listenForNotifications(context)
-                }
 
                 val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
@@ -131,11 +107,21 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
+                            composable(
+                                route = "product_detail/{productId}",
+                                arguments = listOf(navArgument("productId") { type = NavType.StringType })
+                            ) { backStackEntry ->
+                                ProductDetailScreen(
+                                    navController = navController,
+                                    productId = backStackEntry.arguments?.getString("productId")!!,
+                                    cartViewModel = cartViewModel
+                                )
+                            }
+
                             // --- Rutas de Admin ---
                             composable("manage_products") { ManageProductsScreen(navController = navController, productViewModel = productViewModel) }
                             composable("admin_panel") { AdminPanelScreen(navController = navController, userViewModel = userViewModel) }
                             composable("statistics") { SalesStatsScreen(navController = navController, statsViewModel = statsViewModel) }
-                            composable("create_notification") { CreateNotificationScreen(navController = navController, notificationViewModel = notificationViewModel) }
 
                             // --- Rutas de Cuenta y Ajustes ---
                             composable("settings") { SettingsScreen(navController = navController) }
@@ -144,7 +130,7 @@ class MainActivity : ComponentActivity() {
                             composable("change_address") { ManageAddressScreen(navController = navController, userViewModel = userViewModel) }
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
-                            composable("notifications") { NotificationsScreen(navController = navController, notificationViewModel = notificationViewModel) }
+                            composable("notifications") { NotificationsScreen(navController = navController) }
                             composable("help") { HelpScreen(navController = navController) }
                             composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                             composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }

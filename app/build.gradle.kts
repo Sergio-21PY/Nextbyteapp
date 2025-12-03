@@ -90,6 +90,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx") // DEPENDENCIA AÑADIDA
 
     // Corrutinas para Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

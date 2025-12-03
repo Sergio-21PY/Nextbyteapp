@@ -3,6 +3,7 @@ package com.example.nextbyte_app.ui.screens.account
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +39,7 @@ fun AccountScreen(
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
 
+    // Carga inicial del perfil de usuario
     LaunchedEffect(Unit) {
         if (currentUser == null) {
             val userId = authViewModel.getCurrentUserId()
@@ -47,35 +49,42 @@ fun AccountScreen(
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(vertical = 16.dp)
     ) {
-        if (isLoading && currentUser == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        if (currentUser == null) {
+            item {
+                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        } else if (currentUser != null) {
+            return@LazyColumn
+        }
+
+        item {
             ProfileHeader(user = currentUser!!)
             Spacer(modifier = Modifier.height(24.dp))
+        }
 
-            if (currentUser!!.role == UserRole.ADMIN || currentUser!!.role == UserRole.MANAGER) {
+        item {
+            UserDashboard(onNavigate = onNavigate)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (currentUser!!.role == UserRole.ADMIN || currentUser!!.role == UserRole.MANAGER) {
+            item {
                 AdminDashboard(onNavigate = onNavigate)
-            } else {
-                UserDashboard(onNavigate = onNavigate)
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.weight(1f))
-
+        }
+        
+        item {
             LogoutButton {
                 authViewModel.logout()
-            }
-        } else {
-             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
             }
         }
     }
@@ -84,6 +93,7 @@ fun AccountScreen(
 @Composable
 fun UserDashboard(onNavigate: (String) -> Unit) {
     val userAccountItems = listOf(
+        SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),
         SettingItem("Cambiar número de teléfono", Icons.Default.Phone, "change_phone"),
         SettingItem("Cambiar contraseña", Icons.Default.Lock, "change_password"),
         SettingItem("Gestionar direcciones", Icons.Default.LocationOn, "change_address")
@@ -104,9 +114,11 @@ fun UserDashboard(onNavigate: (String) -> Unit) {
 
 @Composable
 fun AdminDashboard(onNavigate: (String) -> Unit) {
+    // <<-- BOTÓN RESTAURADO -->>
     val adminItems = listOf(
-        SettingItem("Gestionar Productos", Icons.Default.Category, "manage_products"), // RUTA CORREGIDA
+        SettingItem("Gestionar Productos", Icons.Default.Category, "manage_products"),
         SettingItem("Gestionar Usuarios", Icons.Default.Group, "admin_panel"),
+        SettingItem("Crear Notificación", Icons.Default.Campaign, "create_notification"),
         SettingItem("Estadísticas de Ventas", Icons.Default.BarChart, "statistics")
     )
 
@@ -148,7 +160,6 @@ fun ProfileHeader(user: User) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = user.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
-        // Mostramos el teléfono si está disponible
         Text(text = user.phone.ifEmpty { user.email }, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

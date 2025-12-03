@@ -1,6 +1,7 @@
 package com.example.nextbyte_app.repository
 
 import android.net.Uri
+import com.example.nextbyte_app.data.Notification
 import com.example.nextbyte_app.data.Order
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.User
@@ -9,7 +10,11 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import android.util.Log
 import java.util.UUID
@@ -21,11 +26,9 @@ class FirebaseRepository {
 
     // ========== FUNCIONES DE PRODUCTOS ==========
 
-    // << LA FUNCIÓN DEFINITIVA Y A PRUEBA DE CRASHES >>
     suspend fun getAllProducts(): List<Product> {
         return try {
             val snapshot = db.collection("products").get().await()
-            // Mapeo manual para evitar crashes por tipos de datos inconsistentes
             snapshot.documents.mapNotNull { doc ->
                 try {
                     Product(
@@ -33,7 +36,6 @@ class FirebaseRepository {
                         name = doc.getString("name") ?: "",
                         description = doc.getString("description") ?: "",
                         code = doc.getString("code") ?: "",
-                        // Lógica robusta para leer el precio como Int o Double
                         price = doc.getDouble("price") ?: (doc.getLong("price")?.toDouble() ?: 0.0),
                         cost = doc.getDouble("cost") ?: (doc.getLong("cost")?.toDouble() ?: 0.0),
                         imageUrl = doc.getString("imageUrl") ?: "",
@@ -44,7 +46,7 @@ class FirebaseRepository {
                     )
                 } catch (e: Exception) {
                     Log.e("FirebaseRepository", "Error parseando producto ${doc.id}: ${e.message}")
-                    null // Ignora el producto corrupto en lugar de crashear
+                    null
                 }
             }
         } catch (e: Exception) {
@@ -116,6 +118,37 @@ class FirebaseRepository {
             Log.e("FirebaseRepository", "Error obteniendo órdenes: ${e.message}")
             emptyList()
         }
+    }
+    
+    // ========== FUNCIONES DE NOTIFICACIONES ==========
+    suspend fun sendNotification(notification: Notification): Boolean {
+        return try {
+            val docRef = db.collection("notifications").document()
+            val notificationWithId = notification.copy(id = docRef.id)
+            docRef.set(notificationWithId).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error enviando notificación: ${e.message}")
+            false
+        }
+    }
+
+    // <<-- FUNCIÓN MODIFICADA PARA ESCUCHAR EN TIEMPO REAL -->>
+    fun listenForNotifications(): Flow<List<Notification>> = callbackFlow {
+        val listener = db.collection("notifications")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("FirebaseRepository", "Listen error", e)
+                    close(e)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val notifications = snapshot.toObjects(Notification::class.java)
+                    trySend(notifications).isSuccess
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     // ========== FUNCIONES DE AUTENTICACIÓN ==========

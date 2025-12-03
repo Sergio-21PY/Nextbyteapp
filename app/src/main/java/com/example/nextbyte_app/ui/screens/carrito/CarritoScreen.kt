@@ -28,155 +28,129 @@ import com.example.nextbyte_app.viewmodels.CartViewModel
 @Composable
 fun CarritoScreen(
     navController: NavController,
-    cartViewModel: CartViewModel // <-- CONECTADO AL VIEWMODEL GLOBAL
+    cartViewModel: CartViewModel
 ) {
     val cartUiState by cartViewModel.uiState.collectAsState()
-    var discountCode by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
+    // <<-- DISEÑO CORREGIDO Y MINIMALISTA -->>
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Carrito de Compras") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-                    }
-                }
-            )
-        },
+        // Se elimina la TopAppBar para un diseño más limpio
         bottomBar = {
             if (cartUiState.items.isNotEmpty()) {
-                Surface(
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-
-                        // --- SECCIÓN DE CÓDIGO DE DESCUENTO ---
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = discountCode,
-                                onValueChange = { discountCode = it },
-                                label = { Text("Código de descuento") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = {
-                                val wasApplied = cartViewModel.applyDiscount(discountCode)
-                                val message = when {
-                                    wasApplied -> "Descuento aplicado correctamente"
-                                    discountCode.isNotEmpty() -> "El código no es válido"
-                                    else -> "Ingresa un código"
-                                }
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            }) {
-                                Text("Aplicar")
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // --- SECCIÓN DE TOTALES ---
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "Subtotal:", style = MaterialTheme.typography.bodyLarge)
-                            Text(text = "$${String.format("%.2f", cartUiState.subtotal)}", style = MaterialTheme.typography.bodyLarge)
-                        }
-
-                        if (cartUiState.discountApplied) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(text = "Descuento (${cartUiState.discountPercentage}%):", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
-                                Text(text = "-$${String.format("%.2f", cartUiState.discountAmount)}", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Total:",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "$${String.format("%.2f", cartUiState.total)}",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = { /* Lógica para procesar el pago */ },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            enabled = cartUiState.items.isNotEmpty()
-                        ) {
-                            Text("Proceder al Pago", fontSize = 16.sp)
-                        }
-                    }
-                }
+                PaymentSummary(cartViewModel = cartViewModel)
             }
         }
     ) { paddingValues ->
         if (cartUiState.items.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Icon(
-                        Icons.Default.ShoppingCart,
-                        contentDescription = "Carrito vacío",
-                        modifier = Modifier.size(80.dp),
-                        tint = MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = "Tu carrito está vacío",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Agrega productos para verlos aquí.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
+            EmptyCartView()
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(vertical = 8.dp)
+                    .padding(paddingValues), // El Scaffold gestiona el padding automáticamente
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(cartUiState.items, key = { it.id }) { cartItem ->
+                items(cartUiState.items, key = { it.id }) {
                     CartItemCard(
-                        cartItem = cartItem,
-                        onRemove = { cartViewModel.removeItem(cartItem.id) },
-                        onQuantityChange = { newQuantity ->
-                            cartViewModel.updateQuantity(cartItem.id, newQuantity)
-                        }
+                        cartItem = it,
+                        onRemove = { cartViewModel.removeItem(it.id) },
+                        onQuantityChange = { newQuantity -> cartViewModel.updateQuantity(it.id, newQuantity) }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyCartView() {
+    Box(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Icon(
+                Icons.Default.ShoppingCart,
+                contentDescription = "Carrito vacío",
+                modifier = Modifier.size(80.dp),
+                tint = MaterialTheme.colorScheme.outline
+            )
+            Text(
+                text = "Tu carrito está vacío",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun PaymentSummary(cartViewModel: CartViewModel) {
+    val cartUiState by cartViewModel.uiState.collectAsState()
+    var discountCode by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    Surface(
+        tonalElevation = 8.dp,
+        shadowElevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = discountCode,
+                    onValueChange = { discountCode = it },
+                    label = { Text("Código de descuento") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = {
+                    val wasApplied = cartViewModel.applyDiscount(discountCode)
+                    val message = when {
+                        wasApplied -> "Descuento aplicado correctamente"
+                        discountCode.isNotEmpty() -> "El código no es válido"
+                        else -> "Ingresa un código"
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }) {
+                    Text("Aplicar")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = "Subtotal:", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "$${String.format("%.2f", cartUiState.subtotal)}", style = MaterialTheme.typography.bodyLarge)
+            }
+
+            if (cartUiState.discountApplied) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(text = "Descuento (${cartUiState.discountPercentage}%):", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(text = "-$${String.format("%.2f", cartUiState.discountAmount)}", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = "Total:", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(
+                    text = "$${String.format("%.2f", cartUiState.total)}",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { /* Lógica para procesar el pago */ },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                enabled = cartUiState.items.isNotEmpty()
+            ) {
+                Text("Proceder al Pago", fontSize = 16.sp)
             }
         }
     }
@@ -189,70 +163,46 @@ fun CartItemCard(
     onQuantityChange: (Int) -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(cartItem.product.imageUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = cartItem.product.name,
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier = Modifier.size(90.dp).clip(RoundedCornerShape(8.dp))
             )
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = cartItem.product.name,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 2
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = "$${String.format("%.2f", cartItem.product.price)}",
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.primary
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(
-                        onClick = {
-                            if (cartItem.quantity > 1) {
-                                onQuantityChange(cartItem.quantity - 1)
-                            } else {
-                                onRemove()
-                            }
-                        },
+                        onClick = { if (cartItem.quantity > 1) onQuantityChange(cartItem.quantity - 1) else onRemove() },
                         modifier = Modifier.size(40.dp),
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
-
                     Text(
                         text = "${cartItem.quantity}",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
-
                     OutlinedButton(
                         onClick = { onQuantityChange(cartItem.quantity + 1) },
                         modifier = Modifier.size(40.dp),
@@ -262,7 +212,6 @@ fun CartItemCard(
                     }
                 }
             }
-
             IconButton(onClick = onRemove) {
                 Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
             }

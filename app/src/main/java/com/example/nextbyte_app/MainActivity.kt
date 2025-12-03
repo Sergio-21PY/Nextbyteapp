@@ -47,30 +47,41 @@ class MainActivity : ComponentActivity() {
                 val userViewModel: UserViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
 
-                val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+                val authState by authViewModel.currentUser.collectAsState()
+                // Usamos el isLoading del AuthViewModel para el estado de carga general de la app
                 val isLoading by authViewModel.isLoading.collectAsState()
 
-                LaunchedEffect(isUserLoggedIn) {
-                    if (isUserLoggedIn) {
-                        val uid = authViewModel.getCurrentUserId()
-                        if (uid.isNotEmpty()) {
-                            userViewModel.loadCurrentUser(uid)
+                // << LA LÓGICA DE GESTIÓN DE SESIÓN DEFINITIVA ESTÁ AQUÍ >>
+                LaunchedEffect(authState) {
+                    val firebaseUser = authState
+                    if (firebaseUser != null) {
+                        // Si hay un usuario y no es el que ya tenemos cargado, recargamos
+                        if (userViewModel.currentUser.value?.uid != firebaseUser.uid) {
+                            userViewModel.clearUser() // Limpiamos CUALQUIER dato de un usuario anterior
+                            userViewModel.loadCurrentUser(firebaseUser.uid)
                         }
                     } else {
+                        // Si no hay usuario (logout), limpiamos todo y vamos a la bienvenida
                         userViewModel.clearUser()
+                        // cartViewModel.clearCart() // Buena práctica: limpiar carrito también
                         navController.navigate("welcome") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            // Limpiamos todo el historial de navegación para que el usuario no pueda volver atrás
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    if (isLoading) {
+                    // La pantalla de carga se muestra solo mientras se resuelve la autenticación inicial
+                    val showLoadingScreen = isLoading && authState == null
+                    
+                    if (showLoadingScreen) {
                         LoadingScreen()
                     } else {
+                        val startDestination = if (authState != null) "home" else "welcome"
                         NavHost(
                             navController = navController,
-                            startDestination = if (isUserLoggedIn) "home" else "welcome"
+                            startDestination = startDestination
                         ) {
 
                             composable("welcome") { WelcomeScreen({ navController.navigate("login") }, { navController.navigate("register") }) }

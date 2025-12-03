@@ -23,6 +23,9 @@ import com.example.nextbyte_app.ui.screens.FavoritosScreen
 import com.example.nextbyte_app.ui.screens.Productos.AddProductScreen
 import com.example.nextbyte_app.ui.screens.Productos.ProductosScreen
 import com.example.nextbyte_app.ui.screens.WelcomeScreen
+import com.example.nextbyte_app.ui.screens.account.ChangeEmailScreen
+import com.example.nextbyte_app.ui.screens.account.ChangePasswordScreen
+import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
@@ -85,7 +88,7 @@ class MainActivity : ComponentActivity() {
                             composable("settings") { SettingsScreen(navController = navController) }
                             composable("change_email") { ChangeEmailScreen(navController = navController, authViewModel = authViewModel) }
                             composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }
-                            composable("change_address") { AddressScreen(navController = navController, userViewModel = userViewModel, authViewModel = authViewModel) }
+                            composable("change_address") { ManageAddressScreen(navController = navController, userViewModel = userViewModel) }
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                             composable("notifications") { NotificationsScreen(navController = navController) }

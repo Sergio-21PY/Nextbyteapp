@@ -44,7 +44,7 @@ import com.example.nextbyte_app.viewmodels.UserViewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
+    navController: NavController, // El NavController principal
     cartViewModel: CartViewModel,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel
@@ -70,7 +70,7 @@ fun HomeScreen(
         topBar = {
             MainTopBar(
                 title = title,
-                onSettingsClick = { navController.navigate("settings") }
+                onSettingsClick = { navController.navigate("settings") } // Usa el principal
             )
         },
         bottomBar = {
@@ -84,7 +84,7 @@ fun HomeScreen(
         ) {
             composable(AppDestinations.Home.route) {
                 HomeContent(
-                    navController = navController,
+                    navController = navController, // Pasa el principal
                     userName = userName,
                     userRole = userRole
                 )
@@ -92,28 +92,30 @@ fun HomeScreen(
 
             composable(AppDestinations.Productos.route) {
                 ProductosScreen(
-                    navController = navController,
+                    navController = navController, // Pasa el principal
                     cartViewModel = cartViewModel
                 )
             }
 
             composable(AppDestinations.Cart.route) {
                 CarritoScreen(
-                    navController = navController,
+                    navController = navController, // Pasa el principal
                     cartViewModel = cartViewModel
                 )
             }
 
             composable(AppDestinations.Account.route) {
                 AccountScreen(
-                    navController = bottomNavController,
                     authViewModel = authViewModel,
-                    userViewModel = userViewModel
+                    userViewModel = userViewModel,
+                    onNavigate = { route -> navController.navigate(route) }
                 )
             }
         }
     }
 }
+
+// El resto del archivo permanece igual...
 
 @Composable
 fun HomeContent(

@@ -10,10 +10,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,17 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-// Las definiciones duplicadas han sido eliminadas.
-// Ahora se importan desde SettingItems.kt
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
+    // SECCIONES DE AJUSTES
+    val accountItems = listOf(
+        SettingItem("Mis Favoritos", Icons.Default.Favorite, "favorites")
+    )
     val generalSettingItems = listOf(
         SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),
         SettingItem("Tiendas físicas", Icons.Default.Store, "physical_stores"),
     )
-
     val legalAndHelpItems = listOf(
         SettingItem("Ayuda", Icons.AutoMirrored.Filled.HelpOutline, "help"),
         SettingItem("Términos y condiciones", Icons.AutoMirrored.Filled.Notes, "terms_and_conditions"),
@@ -45,7 +47,7 @@ fun SettingsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ajustes Generales") },
+                title = { Text("Ajustes") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -60,23 +62,27 @@ fun SettingsScreen(navController: NavController) {
                 .padding(paddingValues),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
+            // SECCIÓN DE CUENTA
             item {
-                Text(
-                    "General", 
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text("Mi Cuenta", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.titleMedium)
+            }
+            items(accountItems) { item ->
+                SettingListItem(item = item, onClick = { navController.navigate(item.route) })
+            }
+            item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+
+            // SECCIÓN GENERAL
+            item {
+                Text("General", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.titleMedium)
             }
             items(generalSettingItems) { item ->
                 SettingListItem(item = item, onClick = { navController.navigate(item.route) })
             }
-            item { Spacer(modifier = Modifier.padding(8.dp)) }
+            item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+            
+            // SECCIÓN DE INFORMACIÓN
             item {
-                Text(
-                    "Información y Soporte", 
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text("Información y Soporte", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.titleMedium)
             }
             items(legalAndHelpItems) { item ->
                 SettingListItem(item = item, onClick = { navController.navigate(item.route) })

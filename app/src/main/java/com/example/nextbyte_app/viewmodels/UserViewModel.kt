@@ -60,7 +60,6 @@ class UserViewModel : ViewModel() {
             _isLoading.value = true
             val success = repository.updateUserProfile(userId, mapOf("phone" to newPhoneNumber))
             if (success) {
-                // Recargamos el usuario para tener los datos frescos
                 loadCurrentUser(userId)
                 _updateResult.value = AuthViewModel.UpdateResult.Success
             } else {
@@ -72,6 +71,30 @@ class UserViewModel : ViewModel() {
 
     fun resetUpdateResult() {
         _updateResult.value = null
+    }
+    
+    // <<-- NUEVA FUNCIÓN PARA FAVORITOS -->>
+    fun toggleFavorite(productId: String) {
+        viewModelScope.launch {
+            val user = _currentUser.value ?: return@launch
+            val isCurrentlyFavorite = user.favoriteProductIds.contains(productId)
+
+            val success = if (isCurrentlyFavorite) {
+                repository.removeFavorite(user.uid, productId)
+            } else {
+                repository.addFavorite(user.uid, productId)
+            }
+
+            if (success) {
+                // Actualizamos el estado localmente para una respuesta instantánea en la UI
+                val updatedFavorites = if (isCurrentlyFavorite) {
+                    user.favoriteProductIds - productId
+                } else {
+                    user.favoriteProductIds + productId
+                }
+                _currentUser.value = user.copy(favoriteProductIds = updatedFavorites)
+            }
+        }
     }
 
     // --- Address Functions ---
@@ -93,7 +116,7 @@ class UserViewModel : ViewModel() {
             }
             val success = repository.addUserAddress(userId, address)
             if (success) {
-                loadAddresses(userId) // Recargar lista
+                loadAddresses(userId) 
                 _addressUpdateResult.value = AuthViewModel.UpdateResult.Success
             } else {
                 _addressUpdateResult.value = AuthViewModel.UpdateResult.Error("No se pudo agregar la dirección.")
@@ -105,7 +128,7 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.deleteUserAddress(userId, address)
             if (success) {
-                loadAddresses(userId) // Recargar lista
+                loadAddresses(userId)
             } else {
                 // Opcional: comunicar error a la UI
             }

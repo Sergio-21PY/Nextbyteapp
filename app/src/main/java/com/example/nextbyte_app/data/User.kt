@@ -12,10 +12,11 @@ data class User(
     @PropertyName("role") val role: UserRole = UserRole.CUSTOMER,
     @PropertyName("createdAt") val createdAt: Timestamp? = null,
     @PropertyName("profileImage") val profileImage: String = "",
-    @PropertyName("isEmailVerified") val isEmailVerified: Boolean = false
+    @PropertyName("isEmailVerified") val isEmailVerified: Boolean = false,
+    @PropertyName("favoriteProductIds") val favoriteProductIds: List<String> = emptyList() // NUEVO CAMPO
 ) {
     // Constructor sin parámetros para Firebase
-    constructor() : this("", "", "", "", "", UserRole.CUSTOMER, null, "", false)
+    constructor() : this("", "", "", "", "", UserRole.CUSTOMER, null, "", false, emptyList())
 }
 
 enum class UserRole {

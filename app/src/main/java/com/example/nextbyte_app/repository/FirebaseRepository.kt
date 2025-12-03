@@ -133,7 +133,6 @@ class FirebaseRepository {
         }
     }
 
-    // <<-- FUNCIÓN MODIFICADA PARA ESCUCHAR EN TIEMPO REAL -->>
     fun listenForNotifications(): Flow<List<Notification>> = callbackFlow {
         val listener = db.collection("notifications")
             .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -192,7 +191,6 @@ class FirebaseRepository {
         }
     }
 
-
     suspend fun changeUserPassword(newPassword: String): Boolean {
         return try {
             auth.currentUser!!.updatePassword(newPassword).await()
@@ -230,6 +228,27 @@ class FirebaseRepository {
             true
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error actualizando perfil: ${e.message}")
+            false
+        }
+    }
+    
+    // <<-- NUEVAS FUNCIONES PARA FAVORITOS -->>
+    suspend fun addFavorite(userId: String, productId: String): Boolean {
+        return try {
+            db.collection("users").document(userId).update("favoriteProductIds", FieldValue.arrayUnion(productId)).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error añadiendo a favoritos: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun removeFavorite(userId: String, productId: String): Boolean {
+        return try {
+            db.collection("users").document(userId).update("favoriteProductIds", FieldValue.arrayRemove(productId)).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error eliminando de favoritos: ${e.message}")
             false
         }
     }

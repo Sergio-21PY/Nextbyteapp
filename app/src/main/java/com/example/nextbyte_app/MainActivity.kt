@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("carrito") { CarritoScreen(navController, cartViewModel) }
-                            composable("favorites") { FavoritosScreen(navController, cartViewModel) }
+                            composable("favorites") { FavoritosScreen(navController = navController, cartViewModel = cartViewModel, userViewModel = userViewModel) } // ViewModel AÑADIDO
                             
                             composable(
                                 route = "add_product?productId={productId}",

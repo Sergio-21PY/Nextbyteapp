@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -26,6 +26,7 @@ import com.example.nextbyte_app.data.Product
 @Composable
 fun ProductCard(
     product: Product,
+    isFavorite: Boolean, // NUEVO: para saber si es favorito
     onProductClick: () -> Unit,
     onAddToCartClick: () -> Unit,
     onFavoriteClick: () -> Unit
@@ -38,7 +39,6 @@ fun ProductCard(
         onClick = onProductClick
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            // IMAGEN DESDE FIREBASE
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(product.imageUrl)
@@ -88,9 +88,9 @@ fun ProductCard(
             ) {
                 IconButton(onClick = onFavoriteClick) {
                     Icon(
-                        imageVector = if (product.isFavorited) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorito",
-                        tint = if (product.isFavorited) Color.Red else Color.Gray
+                        tint = if (isFavorite) Color.Red else Color.Gray
                     )
                 }
 

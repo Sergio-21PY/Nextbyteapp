@@ -29,7 +29,7 @@ fun ProductosScreen(
     navController: NavController,
     cartViewModel: CartViewModel,
     userViewModel: UserViewModel,
-    category: String? = null // Argumento de categoría opcional
+    category: String? = null 
 ) {
     val context = LocalContext.current
     val productViewModel: ProductViewModel = viewModel()
@@ -37,15 +37,12 @@ fun ProductosScreen(
     val isLoading by productViewModel.isLoading.collectAsState()
     val currentUser by userViewModel.currentUser.collectAsState()
 
-    // <<-- LÓGICA DE FILTRADO CORREGIDA Y ROBUSTA -->>
-    LaunchedEffect(isLoading, category) {
-        // Solo aplicamos el filtro DESPUÉS de que la carga inicial haya terminado.
-        if (!isLoading && category != null) {
-            productViewModel.filterByCategory(category)
+    LaunchedEffect(category, isLoading) {
+        if (!isLoading) {
+            productViewModel.filterByCategory(category ?: "Todos")
         }
     }
 
-    // Limpiar el filtro cuando la pantalla se destruye para no afectar la próxima visita
     DisposableEffect(Unit) {
         onDispose {
             productViewModel.filterByCategory("Todos")
@@ -65,15 +62,12 @@ fun ProductosScreen(
             }
         }
     ) { paddingValues ->
-        if (isLoading) {
+        if (isLoading && products.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    CircularProgressIndicator()
-                    Text("Cargando productos...")
-                }
+                CircularProgressIndicator()
             }
         } else {
             LazyColumn(
@@ -98,24 +92,22 @@ fun ProductosScreen(
                     }
                 }
 
-                if (products.isEmpty()) {
+                if (products.isEmpty() && !isLoading) {
                     item {
                         Box(
                             modifier = Modifier.fillMaxWidth().height(200.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Text("📦 No hay productos en esta categoría", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+                            Text("📦 No hay productos en esta categoría", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {
-                    items(products) { product ->
+                    items(products, key = { it.id }) { product ->
+                        // <<-- LÓGICA DE FAVORITOS CORREGIDA -->>
+                        val isFavorite = currentUser?.favoriteProductIds?.contains(product.id) == true
                         ProductCard(
                             product = product,
+                            isFavorite = isFavorite,
                             onProductClick = { navController.navigate("product_detail/${product.id}") }, 
                             onAddToCartClick = {
                                 val cartProduct = CartProduct(
@@ -127,9 +119,7 @@ fun ProductosScreen(
                                 cartViewModel.addItem(cartProduct)
                                 Toast.makeText(context, "✅ ${product.name} agregado al carrito", Toast.LENGTH_SHORT).show()
                             },
-                            onFavoriteClick = {
-                                Toast.makeText(context, "❤️ ${product.name} agregado a favoritos", Toast.LENGTH_SHORT).show()
-                            }
+                            onFavoriteClick = { userViewModel.toggleFavorite(product.id) }
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }

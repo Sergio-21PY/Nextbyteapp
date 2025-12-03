@@ -104,7 +104,7 @@ fun ProductosScreen(
                                 val cartProduct = CartProduct(
                                     id = product.id,
                                     name = product.name,
-                                    price = product.price.toDouble(),
+                                    price = product.price, // CORREGIDO: El precio ya es Double
                                     imageUrl = product.imageUrl
                                 )
                                 cartViewModel.addItem(cartProduct)

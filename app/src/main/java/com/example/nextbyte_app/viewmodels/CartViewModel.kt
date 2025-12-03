@@ -41,7 +41,7 @@ class CartViewModel : ViewModel() {
         "PROMO10" to 10,
         "NEXTBYTE20" to 20,
         "DESCUENTO5" to 5,
-        "PROMO20" to 20 // CÓDIGO AÑADIDO
+        "PROMO20" to 20
     )
 
     fun addItem(product: CartProduct) {
@@ -92,6 +92,11 @@ class CartViewModel : ViewModel() {
             }
         }
         return success
+    }
+
+    // <<-- NUEVA FUNCIÓN PARA LIMPIAR EL CARRITO -->>
+    fun clearCart() {
+        _uiState.value = CartUiState()
     }
 
     private fun calculateTotals(state: CartUiState): CartUiState {

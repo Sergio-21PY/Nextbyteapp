@@ -120,6 +120,16 @@ class FirebaseRepository {
         }
     }
     
+    suspend fun saveOrder(order: Order): Boolean {
+        return try {
+            db.collection("orders").document(order.orderId).set(order).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error guardando la orden: ${e.message}")
+            false
+        }
+    }
+
     // ========== FUNCIONES DE NOTIFICACIONES ==========
     suspend fun sendNotification(notification: Notification): Boolean {
         return try {
@@ -232,7 +242,6 @@ class FirebaseRepository {
         }
     }
     
-    // <<-- NUEVAS FUNCIONES PARA FAVORITOS -->>
     suspend fun addFavorite(userId: String, productId: String): Boolean {
         return try {
             db.collection("users").document(userId).update("favoriteProductIds", FieldValue.arrayUnion(productId)).await()

@@ -31,16 +31,14 @@ import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.screens.admin.ManageProductsScreen
 import com.example.nextbyte_app.ui.screens.admin.SalesStatsScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
+import com.example.nextbyte_app.ui.screens.checkout.CheckoutScreen
+import com.example.nextbyte_app.ui.screens.checkout.OrderSuccessScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
-import com.example.nextbyte_app.viewmodels.AuthViewModel
-import com.example.nextbyte_app.viewmodels.CartViewModel
-import com.example.nextbyte_app.viewmodels.ProductViewModel
-import com.example.nextbyte_app.viewmodels.StatsViewModel
-import com.example.nextbyte_app.viewmodels.UserViewModel
+import com.example.nextbyte_app.viewmodels.* 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +53,7 @@ class MainActivity : ComponentActivity() {
                 val cartViewModel: CartViewModel = viewModel()
                 val productViewModel: ProductViewModel = viewModel()
                 val statsViewModel: StatsViewModel = viewModel()
+                val checkoutViewModel: CheckoutViewModel = viewModel()
 
                 val authState by authViewModel.authState.collectAsState()
                 val isLoading by authViewModel.isLoading.collectAsState()
@@ -100,13 +99,13 @@ class MainActivity : ComponentActivity() {
                                 ProductosScreen(
                                     navController = navController,
                                     cartViewModel = cartViewModel,
-                                    userViewModel = userViewModel, // ViewModel AÑADIDO
+                                    userViewModel = userViewModel,
                                     category = backStackEntry.arguments?.getString("category")
                                 )
                             }
 
                             composable("carrito") { CarritoScreen(navController, cartViewModel) }
-                            composable("favorites") { FavoritosScreen(navController = navController, cartViewModel = cartViewModel, userViewModel = userViewModel) } // ViewModel AÑADIDO
+                            composable("favorites") { FavoritosScreen(navController = navController, cartViewModel = cartViewModel, userViewModel = userViewModel) }
                             
                             composable(
                                 route = "add_product?productId={productId}",
@@ -138,6 +137,10 @@ class MainActivity : ComponentActivity() {
                             composable("admin_panel") { AdminPanelScreen(navController = navController, userViewModel = userViewModel) }
                             composable("statistics") { SalesStatsScreen(navController = navController, statsViewModel = statsViewModel) }
 
+                            // --- Rutas de Checkout ---
+                            composable("checkout") { CheckoutScreen(navController, cartViewModel, userViewModel, checkoutViewModel) }
+                            composable("order_success") { OrderSuccessScreen(navController) }
+
                             // --- Rutas de Cuenta y Ajustes ---
                             composable("settings") { SettingsScreen(navController = navController) }
                             composable("change_phone") { ChangePhoneNumberScreen(navController = navController, userViewModel = userViewModel) }
@@ -146,9 +149,6 @@ class MainActivity : ComponentActivity() {
                             composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
                             composable("notifications") { NotificationsScreen(navController = navController) }
-                            composable("help") { HelpScreen(navController = navController) }
-                            composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
-                            composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
                         }
                     }
                 }

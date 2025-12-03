@@ -32,12 +32,20 @@ fun CarritoScreen(
 ) {
     val cartUiState by cartViewModel.uiState.collectAsState()
 
-    // <<-- DISEÑO CORREGIDO Y MINIMALISTA -->>
     Scaffold(
-        // Se elimina la TopAppBar para un diseño más limpio
+        topBar = {
+            TopAppBar(
+                title = { Text("Carrito de Compras") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                    }
+                }
+            )
+        },
         bottomBar = {
             if (cartUiState.items.isNotEmpty()) {
-                PaymentSummary(cartViewModel = cartViewModel)
+                PaymentSummary(cartViewModel = cartViewModel, navController = navController)
             }
         }
     ) { paddingValues ->
@@ -86,7 +94,7 @@ fun EmptyCartView() {
 }
 
 @Composable
-fun PaymentSummary(cartViewModel: CartViewModel) {
+fun PaymentSummary(cartViewModel: CartViewModel, navController: NavController) {
     val cartUiState by cartViewModel.uiState.collectAsState()
     var discountCode by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -145,8 +153,9 @@ fun PaymentSummary(cartViewModel: CartViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // <<-- BOTÓN CORREGIDO -->>
             Button(
-                onClick = { /* Lógica para procesar el pago */ },
+                onClick = { navController.navigate("checkout") },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 enabled = cartUiState.items.isNotEmpty()
             ) {

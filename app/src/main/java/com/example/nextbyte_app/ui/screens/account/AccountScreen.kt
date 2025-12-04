@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -39,7 +40,6 @@ fun AccountScreen(
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
 
-    // Carga inicial del perfil de usuario
     LaunchedEffect(Unit) {
         if (currentUser == null) {
             val userId = authViewModel.getCurrentUserId()
@@ -92,6 +92,7 @@ fun AccountScreen(
 
 @Composable
 fun UserDashboard(onNavigate: (String) -> Unit) {
+    // "Mis Pedidos" ELIMINADO DE AQUÍ
     val userAccountItems = listOf(
         SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),
         SettingItem("Cambiar número de teléfono", Icons.Default.Phone, "change_phone"),
@@ -105,7 +106,7 @@ fun UserDashboard(onNavigate: (String) -> Unit) {
             userAccountItems.forEachIndexed { index, item ->
                 SettingListItem(item = item, onClick = { onNavigate(item.route) })
                 if (index < userAccountItems.lastIndex) {
-                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }
@@ -114,9 +115,9 @@ fun UserDashboard(onNavigate: (String) -> Unit) {
 
 @Composable
 fun AdminDashboard(onNavigate: (String) -> Unit) {
-    // <<-- BOTÓN RESTAURADO -->>
     val adminItems = listOf(
         SettingItem("Gestionar Productos", Icons.Default.Category, "manage_products"),
+        SettingItem("Gestionar Pedidos", Icons.Default.LocalShipping, "manage_orders"), 
         SettingItem("Gestionar Usuarios", Icons.Default.Group, "admin_panel"),
         SettingItem("Crear Notificación", Icons.Default.Campaign, "create_notification"),
         SettingItem("Estadísticas de Ventas", Icons.Default.BarChart, "statistics")
@@ -128,7 +129,7 @@ fun AdminDashboard(onNavigate: (String) -> Unit) {
             adminItems.forEachIndexed { index, item ->
                 SettingListItem(item = item, onClick = { onNavigate(item.route) })
                 if (index < adminItems.lastIndex) {
-                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }

@@ -3,10 +3,13 @@ package com.example.nextbyte_app.repository
 import android.net.Uri
 import com.example.nextbyte_app.data.Notification
 import com.example.nextbyte_app.data.Order
+import com.example.nextbyte_app.data.OrderItem
+import com.example.nextbyte_app.data.OrderStatus
 import com.example.nextbyte_app.data.Product
 import com.example.nextbyte_app.data.Review
 import com.example.nextbyte_app.data.User
 import com.example.nextbyte_app.data.UserRole
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -24,6 +27,31 @@ class FirebaseRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val storage = FirebaseStorage.getInstance()
+
+    private fun parseOrder(doc: com.google.firebase.firestore.DocumentSnapshot): Order? {
+        return try {
+            val itemsList = doc.get("items") as? List<HashMap<String, Any>> ?: emptyList()
+            val orderItems = itemsList.map {
+                OrderItem(
+                    productId = it["productId"] as? String ?: "",
+                    name = it["name"] as? String ?: "",
+                    quantity = (it["quantity"] as? Long)?.toInt() ?: 0,
+                    price = it["price"] as? Double ?: 0.0
+                )
+            }
+            Order(
+                orderId = doc.getString("orderId") ?: doc.id,
+                userId = doc.getString("userId") ?: "",
+                items = orderItems,
+                totalPrice = doc.getDouble("totalPrice") ?: 0.0,
+                createdAt = doc.getTimestamp("createdAt") ?: Timestamp.now(),
+                status = OrderStatus.valueOf(doc.getString("status") ?: "PROCESANDO")
+            )
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error parseando orden ${doc.id}: ${e.message}")
+            null
+        }
+    }
 
     // ========== FUNCIONES DE PRODUCTOS ==========
 
@@ -61,10 +89,8 @@ class FirebaseRepository {
             val docRef = db.collection("products").document()
             val productWithId = product.copy(id = docRef.id)
             docRef.set(productWithId).await()
-            Log.d("FirebaseRepository", "Producto agregado exitosamente: ${product.name}")
             docRef.id
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error agregando producto: ${e.message}", e)
             throw e
         }
     }
@@ -74,12 +100,10 @@ class FirebaseRepository {
             db.collection("products").document(product.id).set(product).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error actualizando producto: ${e.message}")
             false
         }
     }
     
-    // <<-- NUEVA FUNCIÓN PARA ACTUALIZAR EL RATING PROMEDIO -->>
     suspend fun updateProductAverageRating(productId: String) {
         try {
             val reviews = getReviewsForProduct(productId)
@@ -95,7 +119,6 @@ class FirebaseRepository {
             db.collection("products").document(productId).delete().await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error eliminando producto: ${e.message}")
             false
         }
     }
@@ -107,18 +130,7 @@ class FirebaseRepository {
             imageRef.putFile(imageUri).await()
             imageRef.downloadUrl.await().toString()
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error subiendo imagen: ${e.message}")
             ""
-        }
-    }
-
-    suspend fun getCategories(): List<String> {
-        return try {
-            val snapshot = db.collection("categories").get().await()
-            snapshot.documents.map { it.id }
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo categorías: ${e.message}")
-            emptyList()
         }
     }
 
@@ -128,20 +140,17 @@ class FirebaseRepository {
             db.collection("products").document(productId).collection("reviews").add(review).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error añadiendo reseña: ${e.message}")
             false
         }
     }
 
     suspend fun getReviewsForProduct(productId: String): List<Review> {
         return try {
-            val snapshot = db.collection("products").document(productId)
+            db.collection("products").document(productId)
                 .collection("reviews")
                 .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get().await()
-            snapshot.toObjects(Review::class.java)
+                .get().await().toObjects(Review::class.java)
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo reseñas: ${e.message}")
             emptyList()
         }
     }
@@ -149,19 +158,37 @@ class FirebaseRepository {
     // ========== FUNCIONES DE ÓRDENES ==========
     suspend fun getAllOrders(): List<Order> {
         return try {
-            db.collection("orders").get().await().toObjects(Order::class.java)
+            val snapshot = db.collection("orders").orderBy("createdAt", Query.Direction.DESCENDING).get().await()
+            snapshot.documents.mapNotNull(::parseOrder)
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo órdenes: ${e.message}")
             emptyList()
         }
     }
     
+    suspend fun getOrdersForUser(userId: String): List<Order> {
+        return try {
+            val snapshot = db.collection("orders").whereEqualTo("userId", userId).orderBy("createdAt", Query.Direction.DESCENDING).get().await()
+            snapshot.documents.mapNotNull(::parseOrder)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     suspend fun saveOrder(order: Order): Boolean {
         return try {
             db.collection("orders").document(order.orderId).set(order).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error guardando la orden: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun updateOrderStatus(orderId: String, newStatus: OrderStatus): Boolean {
+        return try {
+            db.collection("orders").document(orderId).update("status", newStatus).await()
+            true
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error actualizando estado del pedido: ${e.message}")
             false
         }
     }
@@ -174,7 +201,6 @@ class FirebaseRepository {
             docRef.set(notificationWithId).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error enviando notificación: ${e.message}")
             false
         }
     }
@@ -184,19 +210,26 @@ class FirebaseRepository {
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.w("FirebaseRepository", "Listen error", e)
                     close(e)
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    val notifications = snapshot.toObjects(Notification::class.java)
-                    trySend(notifications).isSuccess
+                    trySend(snapshot.toObjects(Notification::class.java)).isSuccess
                 }
             }
         awaitClose { listener.remove() }
     }
 
     // ========== FUNCIONES DE AUTENTICACIÓN ==========
+
+    suspend fun sendPasswordResetEmail(email: String): Boolean {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     suspend fun registerUser(email: String, password: String, name: String): Boolean {
         return try {
@@ -206,7 +239,6 @@ class FirebaseRepository {
             createOrUpdateUser(user)
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error en registro: ${e.message}")
             false
         }
     }
@@ -216,7 +248,6 @@ class FirebaseRepository {
             auth.signInWithEmailAndPassword(email, password).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error en login: ${e.message}")
             false
         }
     }
@@ -232,7 +263,6 @@ class FirebaseRepository {
             user.reauthenticate(credential).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error de reautenticación: ${e.message}")
             false
         }
     }
@@ -242,7 +272,6 @@ class FirebaseRepository {
             auth.currentUser!!.updatePassword(newPassword).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error cambiando contraseña: ${e.message}")
             false
         }
     }
@@ -253,7 +282,6 @@ class FirebaseRepository {
         return try {
             db.collection("users").document(userId).get().await().toObject(User::class.java)
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo usuario: ${e.message}")
             null
         }
     }
@@ -263,7 +291,6 @@ class FirebaseRepository {
             db.collection("users").document(user.uid).set(user).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error creando/actualizando usuario: ${e.message}")
             false
         }
     }
@@ -273,7 +300,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update(userData).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error actualizando perfil: ${e.message}")
             false
         }
     }
@@ -283,7 +309,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update("favoriteProductIds", FieldValue.arrayUnion(productId)).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error añadiendo a favoritos: ${e.message}")
             false
         }
     }
@@ -293,7 +318,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update("favoriteProductIds", FieldValue.arrayRemove(productId)).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error eliminando de favoritos: ${e.message}")
             false
         }
     }
@@ -302,7 +326,6 @@ class FirebaseRepository {
         return try {
             db.collection("users").get().await().toObjects(User::class.java)
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo todos los usuarios: ${e.message}")
             emptyList()
         }
     }
@@ -312,7 +335,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update("role", newRole.name).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error actualizando rol de usuario: ${e.message}")
             false
         }
     }
@@ -322,7 +344,6 @@ class FirebaseRepository {
             val doc = db.collection("users").document(userId).get().await()
             (doc.get("addresses") as? List<String>) ?: emptyList()
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error obteniendo direcciones: ${e.message}")
             emptyList()
         }
     }
@@ -332,7 +353,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update("addresses", FieldValue.arrayUnion(address)).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error agregando dirección: ${e.message}")
             false
         }
     }
@@ -342,7 +362,6 @@ class FirebaseRepository {
             db.collection("users").document(userId).update("addresses", FieldValue.arrayRemove(address)).await()
             true
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error eliminando dirección: ${e.message}")
             false
         }
     }

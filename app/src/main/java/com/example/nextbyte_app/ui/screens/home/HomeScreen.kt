@@ -95,7 +95,8 @@ fun HomeScreen(
                 ProductosScreen(
                     navController = navController,
                     cartViewModel = cartViewModel,
-                    userViewModel = userViewModel
+                    userViewModel = userViewModel,
+                    productViewModel = productViewModel // <<-- PARÁMETRO CORREGIDO
                 )
             }
 
@@ -407,4 +408,3 @@ private fun getRoleDisplayName(role: UserRole): String {
         UserRole.GUEST -> "Invitado"
     }
 }
-

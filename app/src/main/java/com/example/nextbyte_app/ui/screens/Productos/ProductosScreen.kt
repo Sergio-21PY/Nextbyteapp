@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nextbyte_app.data.UserRole
 import com.example.nextbyte_app.ui.shared.ProductCard
@@ -29,20 +28,21 @@ fun ProductosScreen(
     navController: NavController,
     cartViewModel: CartViewModel,
     userViewModel: UserViewModel,
+    productViewModel: ProductViewModel, // <<-- AHORA SE RECIBE, NO SE CREA
     category: String? = null 
 ) {
     val context = LocalContext.current
-    val productViewModel: ProductViewModel = viewModel()
+    // Ya no se crea una instancia local del viewModel
     val products by productViewModel.products.collectAsState()
     val isLoading by productViewModel.isLoading.collectAsState()
     val currentUser by userViewModel.currentUser.collectAsState()
 
-    LaunchedEffect(category, isLoading) {
-        if (!isLoading) {
-            productViewModel.filterByCategory(category ?: "Todos")
-        }
+    // Lógica para aplicar el filtro al entrar a la pantalla
+    LaunchedEffect(category) {
+        productViewModel.filterByCategory(category ?: "Todos")
     }
 
+    // Lógica para limpiar el filtro al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
             productViewModel.filterByCategory("Todos")
@@ -51,6 +51,7 @@ fun ProductosScreen(
 
     Scaffold(
         floatingActionButton = {
+            // El botón de añadir solo es visible para Admin o Manager
             if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
                 FloatingActionButton(
                     onClick = { navController.navigate("add_product") },
@@ -62,71 +63,45 @@ fun ProductosScreen(
             }
         }
     ) { paddingValues ->
-        if (isLoading && products.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp)
-            ) {
-                item {
-                    Column {
-                        Text(
-                            text = "🛍️ ${category?.uppercase() ?: "TODOS LOS PRODUCTOS"}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 16.dp)
-                        )
-                        if (products.isNotEmpty()) {
-                            Text(
-                                text = "${products.size} productos encontrados",
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                        }
-                    }
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
+        ) {
+            // Cabecera de la sección
+            Text(
+                text = "🛍️ ${category?.uppercase() ?: "TODOS LOS PRODUCTOS"}",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
 
-                if (products.isEmpty() && !isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("📦 No hay productos en esta categoría", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                } else {
+            if (isLoading && products.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (products.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("📦 No hay productos en esta categoría")
+                }
+            } else {
+                // Lista de productos
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(products, key = { it.id }) { product ->
-                        // <<-- LÓGICA DE FAVORITOS CORREGIDA -->>
                         val isFavorite = currentUser?.favoriteProductIds?.contains(product.id) == true
                         ProductCard(
                             product = product,
                             isFavorite = isFavorite,
-                            onProductClick = { navController.navigate("product_detail/${product.id}") }, 
+                            onProductClick = { navController.navigate("product_detail/${product.id}") },
                             onAddToCartClick = {
-                                val cartProduct = CartProduct(
-                                    id = product.id,
-                                    name = product.name,
-                                    price = product.price,
-                                    imageUrl = product.imageUrl
-                                )
+                                val cartProduct = CartProduct(product.id, product.name, product.price, product.imageUrl)
                                 cartViewModel.addItem(cartProduct)
                                 Toast.makeText(context, "✅ ${product.name} agregado al carrito", Toast.LENGTH_SHORT).show()
                             },
                             onFavoriteClick = { userViewModel.toggleFavorite(product.id) }
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
                     }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
         }

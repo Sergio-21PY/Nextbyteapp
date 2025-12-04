@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextbyte_app.data.Order
 import com.example.nextbyte_app.data.OrderItem
+import com.example.nextbyte_app.data.OrderStatus
 import com.example.nextbyte_app.repository.FirebaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +35,8 @@ class CheckoutViewModel : ViewModel() {
                 items = cartUiState.items.map {
                     OrderItem(it.product.id, it.product.name, it.quantity, it.product.price)
                 },
-                totalPrice = cartUiState.total
+                totalPrice = cartUiState.total,
+                status = OrderStatus.PROCESANDO // <<-- ESTADO INICIAL ASEGURADO
             )
 
             val success = repository.saveOrder(order)

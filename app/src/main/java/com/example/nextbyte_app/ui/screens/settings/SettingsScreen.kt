@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
@@ -32,7 +33,8 @@ import androidx.navigation.NavController
 fun SettingsScreen(navController: NavController) {
     // SECCIONES DE AJUSTES
     val accountItems = listOf(
-        SettingItem("Mis Favoritos", Icons.Default.Favorite, "favorites")
+        SettingItem("Mis Favoritos", Icons.Default.Favorite, "favorites"),
+        SettingItem("Mis Pedidos", Icons.AutoMirrored.Filled.ReceiptLong, "past_orders") // NUEVO ÍTEM
     )
     val generalSettingItems = listOf(
         SettingItem("Notificaciones", Icons.Default.Notifications, "notifications"),

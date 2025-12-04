@@ -29,6 +29,7 @@ import com.example.nextbyte_app.ui.screens.account.ChangePhoneNumberScreen
 import com.example.nextbyte_app.ui.screens.account.ManageAddressScreen
 import com.example.nextbyte_app.ui.screens.admin.AdminPanelScreen
 import com.example.nextbyte_app.ui.screens.admin.CreateNotificationScreen
+import com.example.nextbyte_app.ui.screens.admin.ManageOrdersScreen
 import com.example.nextbyte_app.ui.screens.admin.ManageProductsScreen
 import com.example.nextbyte_app.ui.screens.admin.SalesStatsScreen
 import com.example.nextbyte_app.ui.screens.carrito.CarritoScreen
@@ -36,6 +37,7 @@ import com.example.nextbyte_app.ui.screens.checkout.CheckoutScreen
 import com.example.nextbyte_app.ui.screens.checkout.OrderSuccessScreen
 import com.example.nextbyte_app.ui.screens.home.HomeScreen
 import com.example.nextbyte_app.ui.screens.login.LoginScreen
+import com.example.nextbyte_app.ui.screens.orders.MyOrdersScreen
 import com.example.nextbyte_app.ui.screens.register.RegisterScreen
 import com.example.nextbyte_app.ui.screens.settings.*
 import com.example.nextbyte_app.ui.theme.NextbyteappTheme
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
                 val statsViewModel: StatsViewModel = viewModel()
                 val notificationViewModel: NotificationViewModel = viewModel()
                 val checkoutViewModel: CheckoutViewModel = viewModel()
+                val manageOrdersViewModel: ManageOrdersViewModel = viewModel()
 
                 LaunchedEffect(Unit) {
                     FirebaseMessaging.getInstance().subscribeToTopic("all_users")
@@ -107,6 +110,7 @@ class MainActivity : ComponentActivity() {
                                     navController = navController,
                                     cartViewModel = cartViewModel,
                                     userViewModel = userViewModel,
+                                    productViewModel = productViewModel,
                                     category = backStackEntry.arguments?.getString("category")
                                 )
                             }
@@ -142,6 +146,7 @@ class MainActivity : ComponentActivity() {
 
                             // --- Rutas de Admin ---
                             composable("manage_products") { ManageProductsScreen(navController = navController, productViewModel = productViewModel) }
+                            composable("manage_orders") { ManageOrdersScreen(navController = navController, manageOrdersViewModel = manageOrdersViewModel) } // <-- RUTA AÑADIDA
                             composable("admin_panel") { AdminPanelScreen(navController = navController, userViewModel = userViewModel) }
                             composable("statistics") { SalesStatsScreen(navController = navController, statsViewModel = statsViewModel) }
                             composable("create_notification") { CreateNotificationScreen(navController = navController, notificationViewModel = notificationViewModel) }
@@ -155,9 +160,9 @@ class MainActivity : ComponentActivity() {
                             composable("change_phone") { ChangePhoneNumberScreen(navController = navController, userViewModel = userViewModel) }
                             composable("change_password") { ChangePasswordScreen(navController = navController, authViewModel = authViewModel) }
                             composable("change_address") { ManageAddressScreen(navController = navController, userViewModel = userViewModel) }
-                            composable("past_orders") { PlaceholderScreen(navController = navController, "Pedidos Anteriores") }
+                            composable("past_orders") { MyOrdersScreen(navController = navController, userViewModel = userViewModel) } // <-- PANTALLA REAL AÑADIDA
                             composable("physical_stores") { PhysicalStoresScreen(navController = navController) }
-                            composable("notifications") { NotificationsScreen(navController = navController) }
+                            composable("notifications") { NotificationsScreen(navController = navController, notificationViewModel = viewModel()) }
                             composable("help") { HelpScreen(navController = navController) }
                             composable("terms_and_conditions") { TermsAndConditionsScreen(navController = navController) }
                             composable("about_nextbyte") { AboutNextByteScreen(navController = navController) }
